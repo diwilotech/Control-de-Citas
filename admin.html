@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda · Administración</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="app-topbar navbar navbar-expand-md py-2">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2 text-white" href="index.html">
+      <span class="brand-mark"><i class="bi bi-calendar2-heart"></i></span>
+      <span class="fw-bold">Agenda</span>
+    </a>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <ul class="nav">
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-person"></i> Cliente</a></li>
+        <li class="nav-item"><a class="nav-link active" href="admin.html"><i class="bi bi-speedometer2"></i> Administración</a></li>
+      </ul>
+      <button class="btn btn-sm btn-outline-light" onclick="Admin.resetDemo()"><i class="bi bi-arrow-counterclockwise"></i> Reiniciar demo</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-4 py-4">
+
+  <ul class="nav nav-pills nav-pills-app gap-2 mb-4">
+    <li class="nav-item"><button class="nav-link active" id="atab-metrics" onclick="Admin.showTab('metrics')"><i class="bi bi-graph-up me-1"></i>Métricas</button></li>
+    <li class="nav-item"><button class="nav-link" id="atab-agenda" onclick="Admin.showTab('agenda')"><i class="bi bi-calendar-week me-1"></i>Agenda</button></li>
+    <li class="nav-item"><button class="nav-link" id="atab-rules" onclick="Admin.showTab('rules')"><i class="bi bi-sliders me-1"></i>Reglas</button></li>
+    <li class="nav-item"><button class="nav-link" id="atab-clients" onclick="Admin.showTab('clients')"><i class="bi bi-people me-1"></i>Clientes</button></li>
+  </ul>
+
+  <!-- METRICS -->
+  <div id="apanel-metrics">
+    <div class="row g-3 mb-4" id="metricCards"></div>
+
+    <div class="row g-3">
+      <div class="col-lg-7">
+        <div class="card-panel p-4">
+          <h6 class="display-font fw-bold mb-3">Citas por estado</h6>
+          <canvas id="statusChart" height="140"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card-panel p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="display-font fw-bold mb-0">Recordatorios automáticos</h6>
+          </div>
+          <p class="small text-muted-soft">En producción, un job programado revisa cada citas confirmadas y dispara plantillas de WhatsApp a 24h y 2h antes. Aquí puedes simular esa corrida:</p>
+          <button class="btn btn-brand w-100" onclick="Admin.runReminders()"><i class="bi bi-whatsapp"></i> Ejecutar barrido de recordatorios ahora</button>
+          <div id="reminderResult" class="small text-muted-soft mt-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENDA -->
+  <div id="apanel-agenda" class="d-none">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card-panel p-4">
+          <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+            <h6 class="display-font fw-bold mb-0">Agenda por especialista</h6>
+            <div class="d-flex gap-2">
+              <select class="form-select form-select-sm" id="agendaSpecialist" onchange="Admin.renderAgenda()"></select>
+              <input type="date" class="form-control form-control-sm" id="agendaDate" onchange="Admin.renderAgenda()">
+            </div>
+          </div>
+          <div id="agendaTimeline"></div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card-panel p-4">
+          <h6 class="display-font fw-bold mb-3"><i class="bi bi-lock"></i> Bloquear día u hora</h6>
+          <p class="small text-muted-soft">Úsalo para almuerzo, vacaciones o cualquier ausencia del especialista.</p>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Especialista</label>
+            <select class="form-select form-select-sm" id="blockSpecialist"></select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Fecha</label>
+            <input type="date" class="form-control form-control-sm" id="blockDate">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Tipo de bloqueo</label>
+            <select class="form-select form-select-sm" id="blockType" onchange="Admin.toggleBlockRange()">
+              <option value="full">Día completo</option>
+              <option value="partial">Rango de horas</option>
+            </select>
+          </div>
+          <div class="row g-2 mb-2" id="blockRangeRow" style="display:none;">
+            <div class="col-6">
+              <label class="form-label small">Desde</label>
+              <input type="time" class="form-control form-control-sm" id="blockStart" value="13:00">
+            </div>
+            <div class="col-6">
+              <label class="form-label small">Hasta</label>
+              <input type="time" class="form-control form-control-sm" id="blockEnd" value="14:00">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Motivo</label>
+            <input type="text" class="form-control form-control-sm" id="blockReason" placeholder="Ej: Vacaciones, cita médica...">
+          </div>
+          <button class="btn btn-brand w-100" onclick="Admin.addBlock()"><i class="bi bi-plus-lg"></i> Agregar bloqueo</button>
+
+          <hr>
+          <h6 class="fw-semibold small mb-2">Bloqueos activos</h6>
+          <div id="blocksList" class="small"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RULES -->
+  <div id="apanel-rules" class="d-none">
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card-panel p-4">
+          <h6 class="display-font fw-bold mb-3"><i class="bi bi-sliders"></i> Reglas de reserva</h6>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Ventana mínima de cancelación (horas)</label>
+            <input type="number" min="0" class="form-control" id="ruleCancelWindow">
+            <div class="form-text">El cliente no podrá cancelar ni reagendar si faltan menos de estas horas para la cita.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Intervalo entre citas (minutos)</label>
+            <input type="number" min="5" step="5" class="form-control" id="ruleInterval">
+            <div class="form-text">Granularidad de los horarios que se muestran en el calendario (ej. cada 15 min).</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Límite de citas por cliente al día</label>
+            <input type="number" min="1" class="form-control" id="ruleDailyLimit">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Duración del bloqueo temporal de horario (segundos)</label>
+            <input type="number" min="15" class="form-control" id="ruleHold">
+            <div class="form-text">Tiempo que un horario queda "apartado" mientras el cliente confirma, antes de liberarse para otros.</div>
+          </div>
+
+          <button class="btn btn-brand" onclick="Admin.saveRules()"><i class="bi bi-check2"></i> Guardar reglas</button>
+          <div id="rulesSaved" class="small text-success mt-2" style="display:none;"><i class="bi bi-check-circle"></i> Reglas actualizadas</div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card-panel p-4">
+          <h6 class="display-font fw-bold mb-3"><i class="bi bi-info-circle"></i> Cómo se aplican</h6>
+          <ul class="small text-muted-soft" style="line-height:1.9;">
+            <li>El <strong>calendario del cliente</strong> genera slots usando el intervalo y descarta los que ya están tomados o bloqueados.</li>
+            <li>Al elegir un horario, se crea un <strong>bloqueo temporal (hold)</strong> igual al valor configurado, evitando doble reserva mientras el cliente confirma.</li>
+            <li>Si dos clientes intentan el mismo horario a la vez, solo el primero obtiene el hold — el otro recibe un rechazo inmediato.</li>
+            <li>Cancelaciones fuera de la ventana permitida quedan bloqueadas desde "Mis citas".</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTS -->
+  <div id="apanel-clients" class="d-none">
+    <div class="card-panel p-4">
+      <h6 class="display-font fw-bold mb-3">Clientes</h6>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr class="text-muted-soft small text-uppercase">
+              <th>Cliente</th><th>Teléfono</th><th>Citas totales</th><th>Inasistencias</th><th>Ingresos generados</th>
+            </tr>
+          </thead>
+          <tbody id="clientsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="adminToast" class="toast align-items-center border-0 text-white bg-success" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="adminToastBody"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="js/db.js"></script>
+<script src="js/whatsapp.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

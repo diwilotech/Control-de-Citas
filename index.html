@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda · Reserva tu cita</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="app-topbar navbar navbar-expand-md py-2">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2 text-white" href="index.html">
+      <span class="brand-mark"><i class="bi bi-calendar2-heart"></i></span>
+      <span class="fw-bold">Agenda</span>
+    </a>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <ul class="nav">
+        <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-person"></i> Cliente</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-speedometer2"></i> Administración</a></li>
+      </ul>
+      <span id="loginStatus" class="text-white-50 small d-none d-sm-inline"></span>
+      <button id="logoutBtn" class="btn btn-sm btn-outline-light d-none"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </div>
+</nav>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="container py-5" style="max-width:460px;">
+  <div class="card-panel p-4 p-md-5 text-center">
+    <span class="brand-mark mx-auto mb-3" style="width:52px;height:52px;font-size:1.4rem;background:var(--primary);color:#fff;border-radius:14px;"><i class="bi bi-calendar2-check"></i></span>
+    <h3 class="display-font fw-bold mb-1">Bienvenido</h3>
+    <p class="text-muted-soft mb-4">Inicia sesión para reservar tu cita.</p>
+
+    <button class="btn btn-outline-dark w-100 mb-2 d-flex align-items-center justify-content-center gap-2" onclick="Client.loginWithGoogle()">
+      <i class="bi bi-google"></i> Continuar con Google
+    </button>
+
+    <div class="d-flex align-items-center gap-2 my-3">
+      <hr class="flex-grow-1"><span class="text-muted-soft small">o</span><hr class="flex-grow-1">
+    </div>
+
+    <div id="phoneStep">
+      <label class="form-label small text-start w-100 fw-semibold">Número de WhatsApp</label>
+      <div class="input-group mb-2">
+        <span class="input-group-text">+57</span>
+        <input id="phoneInput" type="tel" class="form-control" placeholder="300 123 4567">
+      </div>
+      <button class="btn btn-brand w-100" onclick="Client.requestWhatsAppCode()">
+        <i class="bi bi-whatsapp"></i> Enviar código por WhatsApp
+      </button>
+    </div>
+
+    <div id="codeStep" class="d-none">
+      <p class="small text-muted-soft">Enviamos un código de 4 dígitos por WhatsApp a <strong id="codePhoneShown"></strong> (demo: usa <code>1234</code>).</p>
+      <input id="codeInput" maxlength="4" class="form-control text-center mb-2" style="letter-spacing:.5em;font-weight:700;" placeholder="••••">
+      <button class="btn btn-brand w-100" onclick="Client.verifyCode()">Verificar</button>
+      <button class="btn btn-link btn-sm mt-1" onclick="Client.backToPhone()">Cambiar número</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="appScreen" class="container py-4 d-none">
+
+  <ul class="nav nav-pills nav-pills-app gap-2 mb-4">
+    <li class="nav-item"><button class="nav-link active" id="tab-book" onclick="Client.showTab('book')"><i class="bi bi-plus-circle me-1"></i>Nueva cita</button></li>
+    <li class="nav-item"><button class="nav-link" id="tab-mine" onclick="Client.showTab('mine')"><i class="bi bi-calendar3 me-1"></i>Mis citas</button></li>
+    <li class="nav-item"><button class="nav-link" id="tab-wa" onclick="Client.showTab('wa')"><i class="bi bi-whatsapp me-1"></i>WhatsApp <span id="waBadge" class="badge bg-danger ms-1 d-none">0</span></button></li>
+  </ul>
+
+  <!-- BOOKING FLOW -->
+  <div id="panel-book">
+    <div class="row g-4">
+      <div class="col-lg-8">
+
+        <!-- Step 1: service -->
+        <div class="card-panel p-4 mb-3">
+          <div class="step-pill active mb-3"><span class="num">1</span> Elige un servicio</div>
+          <div id="serviceList" class="row g-3"></div>
+        </div>
+
+        <!-- Step 2: specialist -->
+        <div class="card-panel p-4 mb-3" id="specialistSection" style="display:none;">
+          <div class="step-pill active mb-3"><span class="num">2</span> Elige un especialista</div>
+          <div id="specialistList" class="row g-3"></div>
+        </div>
+
+        <!-- Step 3: calendar -->
+        <div class="card-panel p-4 mb-3" id="calendarSection" style="display:none;">
+          <div class="step-pill active mb-3"><span class="num">3</span> Elige día y hora</div>
+          <div class="day-strip mb-3" id="dayStrip"></div>
+          <div id="slotsWrap">
+            <div class="slot-grid" id="slotGrid"></div>
+            <p class="text-muted-soft small mt-2 mb-0" id="noSlotsMsg" style="display:none;">No hay horarios disponibles este día. Prueba con otro día.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Summary -->
+      <div class="col-lg-4">
+        <div class="card-panel p-4 sticky-top" style="top:1rem;">
+          <h6 class="display-font fw-bold mb-3">Resumen de tu cita</h6>
+          <div id="summaryEmpty" class="text-muted-soft small">Selecciona un servicio para comenzar.</div>
+          <div id="summaryFilled" style="display:none;">
+            <div class="d-flex justify-content-between small mb-2"><span class="text-muted-soft">Servicio</span><strong id="sumService"></strong></div>
+            <div class="d-flex justify-content-between small mb-2"><span class="text-muted-soft">Especialista</span><strong id="sumSpecialist"></strong></div>
+            <div class="d-flex justify-content-between small mb-2"><span class="text-muted-soft">Fecha</span><strong id="sumDate"></strong></div>
+            <div class="d-flex justify-content-between small mb-2"><span class="text-muted-soft">Hora</span><strong id="sumTime"></strong></div>
+            <div class="d-flex justify-content-between small mb-3"><span class="text-muted-soft">Duración</span><strong id="sumDuration"></strong></div>
+            <hr>
+            <div class="d-flex justify-content-between mb-3"><span class="fw-semibold">Total</span><strong id="sumPrice" class="fs-5" style="color:var(--primary);"></strong></div>
+            <div id="holdTimer" class="alert alert-warning py-2 px-3 small d-none mb-3"><i class="bi bi-clock-history"></i> Horario reservado temporalmente: <strong id="holdSeconds"></strong>s</div>
+            <button class="btn btn-brand w-100" id="confirmBtn" onclick="Client.confirmBooking()">
+              <i class="bi bi-check2-circle"></i> Confirmar cita
+            </button>
+            <button class="btn btn-link btn-sm w-100 mt-1 text-muted-soft" onclick="Client.resetBooking()">Empezar de nuevo</button>
+          </div>
+        </div>
+
+        <div class="card-panel p-3 mt-3">
+          <button class="simulate-btn w-100 rounded-3 py-2" onclick="Client.simulateRaceCondition()">
+            <i class="bi bi-lightning-charge"></i> Simular 2 clientes reservando el mismo horario a la vez
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY APPOINTMENTS -->
+  <div id="panel-mine" class="d-none">
+    <div class="card-panel p-4">
+      <h6 class="display-font fw-bold mb-3">Mis citas</h6>
+      <div id="myAppointmentsList"></div>
+    </div>
+  </div>
+
+  <!-- WHATSAPP SIMULATOR -->
+  <div id="panel-wa" class="d-none">
+    <div class="mx-auto" style="max-width:480px;">
+      <div class="wa-panel overflow-hidden">
+        <div class="wa-header px-3 py-3 d-flex align-items-center gap-2">
+          <i class="bi bi-whatsapp fs-4"></i>
+          <div>
+            <div class="fw-semibold">Notificaciones de tu cita</div>
+            <div class="small text-white-50">Simulador — WhatsApp Cloud API</div>
+          </div>
+        </div>
+        <div id="waMessages" class="p-3 d-flex flex-column gap-2" style="min-height:280px;max-height:520px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast for booking errors -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="appToast" class="toast align-items-center border-0 text-white" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="appToastBody"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/db.js"></script>
+<script src="js/whatsapp.js"></script>
+<script src="js/client.js"></script>
+</body>
+</html>

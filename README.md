@@ -33,15 +33,18 @@ SELECT/INSERT/UPDATE/DELETE cinco veces.
 
 ## Desplegar
 
+La base D1 (`control-de-citas-db`) ya está creada y con el esquema aplicado (14 tablas), y su
+`database_id` ya está en `wrangler.toml`. Solo falta subir el código del Worker:
+
 ```bash
 npm install
 npx wrangler login
-
-# Crear la base D1 (una sola vez) y pegar el database_id en wrangler.toml
-npx wrangler d1 create control-de-citas-db
-
-npm run db:migrate:remote
 npm run deploy
+```
+
+Si en el futuro agregas una migración nueva (`migrations/0002_*.sql`), aplícala con:
+```bash
+npm run db:migrate:remote
 ```
 
 ### Conectar Evolution API (secretos, no van en el repo)

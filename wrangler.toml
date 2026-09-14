@@ -9,4 +9,4 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "control-de-citas-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "2b827e45-bfef-4646-bbc3-23ffe75c9534"

@@ -1,0 +1,12 @@
+name = "control-de-citas"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "control-de-citas-db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

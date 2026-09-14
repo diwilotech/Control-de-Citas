@@ -1,0 +1,48 @@
+import { makeResource, all, first, run } from "../lib/db.js";
+import { registerCrud } from "../lib/crud.js";
+import { json, error, readJson } from "../lib/http.js";
+
+const services = makeResource("services", ["name", "duration_min", "price", "cancel_window_hours", "reminder_hours", "allowed_space_types"]);
+const specialists = makeResource("specialists", ["name", "role", "avatar", "color", "work_days"]);
+const spaces = makeResource("spaces", ["label", "type", "shape", "capacity", "x", "y", "w", "h", "status"]);
+const clients = makeResource("clients", ["name", "email", "phone"]);
+const blocks = makeResource("blocks", ["specialist_id", "date", "start", "end", "reason"]);
+
+export function registerResources(router) {
+  registerCrud(router, "services", services, "name");
+  registerCrud(router, "specialists", specialists, "name");
+  registerCrud(router, "spaces", spaces, "rowid");
+  registerCrud(router, "clients", clients, "name");
+  registerCrud(router, "blocks", blocks, "date");
+
+  // Servicios que ofrece un especialista (tabla puente specialist_services).
+  router.put("/api/:slug/staff/specialists/:id/services", async (request, env, ctx) => {
+    const { serviceIds } = await readJson(request);
+    await run(env,
+      `DELETE FROM specialist_services WHERE specialist_id IN (SELECT id FROM specialists WHERE id=? AND business_id=?)`,
+      ctx.params.id, ctx.business.id);
+    for (const serviceId of serviceIds || []) {
+      await run(env, `INSERT INTO specialist_services (specialist_id, service_id) VALUES (?,?)`, ctx.params.id, serviceId);
+    }
+    return json({ ok: true });
+  });
+  router.get("/api/:slug/staff/specialists/:id/services", async (request, env, ctx) => {
+    const rows = await all(env, `SELECT service_id FROM specialist_services WHERE specialist_id=?`, ctx.params.id);
+    return json(rows.map((r) => r.service_id));
+  });
+
+  // Estadísticas de un cliente: asistencia, inasistencias, cancelaciones, última visita.
+  router.get("/api/:slug/staff/clients/:id/stats", async (request, env, ctx) => {
+    const client = await first(env, `SELECT * FROM clients WHERE business_id=? AND id=?`, ctx.business.id, ctx.params.id);
+    if (!client) return error("Cliente no encontrado.", 404);
+    const appts = await all(env, `SELECT status, date FROM appointments WHERE business_id=? AND client_id=?`, ctx.business.id, client.id);
+    const stats = { attended: 0, noShow: 0, cancelled: 0, lastDate: null };
+    for (const a of appts) {
+      if (a.status === "completed") stats.attended++;
+      if (a.status === "no-show") stats.noShow++;
+      if (a.status === "cancelled") stats.cancelled++;
+      if (!stats.lastDate || a.date > stats.lastDate) stats.lastDate = a.date;
+    }
+    return json(stats);
+  });
+}

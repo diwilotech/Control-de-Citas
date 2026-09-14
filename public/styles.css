@@ -1,0 +1,19 @@
+:root{
+  --ink:#12211f; --paper:#f6f4ee; --line:#e7e3d8;
+  --primary:#0f5257; --primary-dark:#0a3a3d;
+  --accent:#d97a3f; --amber:#e0a339; --muted:#6b7570; --danger:#c0472f;
+}
+body{ background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; }
+h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; letter-spacing:-.01em; }
+.card-panel{ background:#fff; border:1px solid var(--line); border-radius:16px; }
+.label-xs{ font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+.btn-brand{ background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600; }
+.btn-brand:hover{ background:var(--primary-dark); border-color:var(--primary-dark); color:#fff; }
+.avatar-badge{ width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:.8rem; flex-shrink:0; }
+.topbar{ background:#fff; border-bottom:1px solid var(--line); }
+.slot-btn{ border:1px solid var(--line); border-radius:10px; padding:.5rem .3rem; background:#fff; font-weight:600; font-size:.85rem; }
+.slot-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+.appt-row{ border:1px solid var(--line); border-left:4px solid var(--primary); border-radius:10px; padding:.6rem .9rem; background:#fff; }
+.appt-row.st-completed{ border-left-color:var(--muted); }
+.appt-row.st-cancelled, .appt-row.st-no-show{ border-left-color:var(--danger); opacity:.8; }
+.appt-row.st-reagendar{ border-left-color:var(--amber); }

@@ -35,15 +35,20 @@ export default {
     const url = new URL(request.url);
 
     if (!url.pathname.startsWith("/api/")) {
-      // /t/:slug/admin -> panel de staff, /t/:slug -> reserva pública del cliente
+      // /t/:slug/admin -> panel de staff, /t/:slug -> reserva pública del cliente. Deben calzar
+      // exacto (ni un segmento más): si no, cae a los assets normales. Antes cualquier cosa bajo
+      // /t/:slug/ (como /t/:slug/styles.css, que pide el navegador por la ruta relativa del HTML)
+      // devolvía por error el HTML de la reserva en vez de 404 — rompía CSS/JS en las rutas /t/:slug.
       const parts = url.pathname.split("/").filter(Boolean);
-      if (parts[0] === "t" && parts[1]) {
+      if (parts[0] === "t" && parts[1] && parts.length === 2) {
         // Sin extensión: Assets sirve el .html directo (200), en vez de redirigir
         // como hace con las rutas .html explícitas — eso le hacía perder el slug al cliente.
         // "/index" también redirige (a "/", por ser el documento índice), así que para la
         // reserva del cliente se pide la raíz directamente.
-        if (parts[2] === "admin") return serveAsset(env, request, "/admin");
         return serveAsset(env, request, "/");
+      }
+      if (parts[0] === "t" && parts[1] && parts.length === 3 && parts[2] === "admin") {
+        return serveAsset(env, request, "/admin");
       }
       return env.ASSETS.fetch(request);
     }

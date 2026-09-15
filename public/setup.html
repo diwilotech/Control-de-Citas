@@ -10,6 +10,8 @@
 <body>
 <main class="container py-5" style="max-width:900px;">
 
+  <p id="bootStatus" class="text-center text-muted">Cargando…</p>
+
   <!-- Primer arranque: no existe super admin todavía -->
   <div id="registerView" class="card-panel p-4 mx-auto" style="display:none;max-width:460px;">
     <h1 class="h4 fw-bold display-font mb-1">Crear cuenta de super admin</h1>
@@ -79,14 +81,20 @@ function showView(id) {
 }
 
 async function boot() {
-  const { hasAdmin } = await apiRoot("/admin/status");
-  if (!hasAdmin) return showView("registerView");
   try {
-    await apiRoot("/admin/me");
-    showView("businessView");
-    loadBusinesses();
-  } catch {
-    showView("loginView");
+    const { hasAdmin } = await apiRoot("/admin/status");
+    document.getElementById("bootStatus").style.display = "none";
+    if (!hasAdmin) return showView("registerView");
+    try {
+      await apiRoot("/admin/me");
+      showView("businessView");
+      loadBusinesses();
+    } catch {
+      showView("loginView");
+    }
+  } catch (e) {
+    document.getElementById("bootStatus").textContent =
+      `No se pudo conectar con el servidor (${e.message}). Recarga la página.`;
   }
 }
 boot();

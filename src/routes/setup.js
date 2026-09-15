@@ -5,6 +5,10 @@ import { requirePlatformAdmin } from "../lib/auth.js";
 import { hashPin, randomSalt, validatePinFormat } from "../lib/pin.js";
 import { DEFAULT_TEMPLATES } from "../lib/templates.js";
 
+// El negocio vive en /:slug (reserva) y /:slug/admin (panel) — estas palabras ya son rutas del
+// sistema y no se pueden usar como slug (ver el ruteo de /:slug en src/index.js).
+const RESERVED_SLUGS = new Set(["admin", "api", "setup", "app", "styles", "t"]);
+
 // Crea un negocio nuevo (tenant) con su primer usuario dueño. Solo el super admin de la
 // plataforma puede hacerlo (ver routes/platform.js).
 export function registerSetup(router) {
@@ -17,6 +21,7 @@ export function registerSetup(router) {
     if (!/^[a-z0-9-]{3,40}$/.test(slug)) {
       return error("El slug debe tener 3-40 caracteres: minúsculas, números o guiones.");
     }
+    if (RESERVED_SLUGS.has(slug)) return error("Ese slug está reservado, elige otro.");
     if (!body.businessName || !body.ownerEmail || !body.ownerName) {
       return error("Faltan businessName, ownerName u ownerEmail.");
     }

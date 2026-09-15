@@ -23,7 +23,7 @@ registerSettings(router);
 registerWebhook(router);
 
 // Sirve un archivo estático concreto a través del binding de assets (para las rutas bonitas
-// /t/:slug y /t/:slug/admin, que no existen como archivo real).
+// /:slug, /:slug/admin y /admin, que no existen como archivo real).
 function serveAsset(env, request, file) {
   const url = new URL(request.url);
   url.pathname = file;
@@ -35,21 +35,24 @@ export default {
     const url = new URL(request.url);
 
     if (!url.pathname.startsWith("/api/")) {
-      // /t/:slug/admin -> panel de staff, /t/:slug -> reserva pública del cliente. Deben calzar
-      // exacto (ni un segmento más): si no, cae a los assets normales. Antes cualquier cosa bajo
-      // /t/:slug/ (como /t/:slug/styles.css, que pide el navegador por la ruta relativa del HTML)
-      // devolvía por error el HTML de la reserva en vez de 404 — rompía CSS/JS en las rutas /t/:slug.
       const parts = url.pathname.split("/").filter(Boolean);
-      if (parts[0] === "t" && parts[1] && parts.length === 2) {
-        // Sin extensión: Assets sirve el .html directo (200), en vez de redirigir
-        // como hace con las rutas .html explícitas — eso le hacía perder el slug al cliente.
-        // "/index" también redirige (a "/", por ser el documento índice), así que para la
-        // reserva del cliente se pide la raíz directamente.
-        return serveAsset(env, request, "/");
+
+      // /admin (sin negocio) -> panel del super admin (setup.html administra negocios/usuarios).
+      if (parts.length === 1 && parts[0] === "admin") {
+        return serveAsset(env, request, "/setup");
       }
-      if (parts[0] === "t" && parts[1] && parts.length === 3 && parts[2] === "admin") {
-        return serveAsset(env, request, "/admin");
+
+      // /:slug -> reserva del cliente, /:slug/admin -> panel de personal de ese negocio. Un slug
+      // se distingue de un archivo real (styles.css, app.js, favicon.ico...) probando primero
+      // contra los assets tal cual: si existe de verdad, se sirve ese archivo sin más vueltas.
+      if (parts.length >= 1 && parts.length <= 2 && !parts[0].includes(".")) {
+        const direct = await env.ASSETS.fetch(request);
+        if (direct.status !== 404) return direct;
+
+        if (parts.length === 1) return serveAsset(env, request, "/");
+        if (parts.length === 2 && parts[1] === "admin") return serveAsset(env, request, "/admin");
       }
+
       return env.ASSETS.fetch(request);
     }
 

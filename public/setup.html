@@ -155,7 +155,7 @@ document.getElementById("createBtn").onclick = async () => {
       document.getElementById(id).value = "";
     }
     document.getElementById("createForm").style.display = "none";
-    toast(`Negocio creado. Reservas: ${location.origin}/t/${body.slug}`);
+    toast(`Negocio creado. Reservas: ${location.origin}/${body.slug}`);
     loadBusinesses();
   } catch (e) { toast(e.message, false); }
 };
@@ -167,7 +167,7 @@ async function loadBusinesses() {
   document.getElementById("businessList").innerHTML = list.map((b) => `
     <div class="d-flex justify-content-between align-items-center border rounded p-2">
       <div>
-        <strong>${b.name}</strong> <span class="text-muted small">/t/${b.slug}</span>
+        <strong>${b.name}</strong> <span class="text-muted small">/${b.slug}</span>
         ${b.whatsapp_enabled ? "" : '<span class="badge bg-secondary ms-2">WhatsApp desactivado</span>'}
       </div>
       <button class="btn btn-sm btn-outline-dark" data-id="${b.id}">Ver</button>
@@ -181,10 +181,10 @@ async function loadBusinessDetail(id) {
   document.getElementById("businessDetail").innerHTML = `
     <div class="card-panel p-4">
       <h2 class="h6 fw-bold display-font mb-1">${business.name}</h2>
-      <p class="text-muted small mb-2">/t/${business.slug} · WhatsApp ${business.whatsapp_enabled ? "activado" : "desactivado"}</p>
+      <p class="text-muted small mb-2">/${business.slug} · WhatsApp ${business.whatsapp_enabled ? "activado" : "desactivado"}</p>
       <p class="mb-3">
-        <a href="${location.origin}/t/${business.slug}" target="_blank">Reservas del cliente</a> ·
-        <a href="${location.origin}/t/${business.slug}/admin" target="_blank">Panel del negocio</a>
+        <a href="${location.origin}/${business.slug}" target="_blank">Reservas del cliente</a> ·
+        <a href="${location.origin}/${business.slug}/admin" target="_blank">Panel del negocio</a>
       </p>
 
       <h3 class="label-xs mb-1">Servicios (${services.length})</h3>

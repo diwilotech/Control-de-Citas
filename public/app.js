@@ -1,9 +1,8 @@
 // Cliente de API compartido por index.html (reserva pública) y admin.html (panel de staff).
+// El negocio vive en /:slug (reserva) o /:slug/admin (panel) — siempre el primer segmento.
 function tenantSlug() {
   const parts = location.pathname.split("/").filter(Boolean);
-  const i = parts.indexOf("t");
-  if (i >= 0 && parts[i + 1]) return parts[i + 1];
-  return new URLSearchParams(location.search).get("t");
+  return parts[0] || new URLSearchParams(location.search).get("t");
 }
 
 async function request(url, opts = {}) {
@@ -20,7 +19,7 @@ async function request(url, opts = {}) {
 
 async function api(path, opts = {}) {
   const slug = tenantSlug();
-  if (!slug) throw new Error("Falta el negocio en la URL (usa /t/tu-negocio).");
+  if (!slug) throw new Error("Falta el negocio en la URL (usa /tu-negocio).");
   return request(`/api/${slug}${path}`, opts);
 }
 

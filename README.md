@@ -8,7 +8,8 @@ Sin frameworks ni bundler: JavaScript plano en módulos ES, para que sea fácil 
 - **1 solo Worker** sirve la API (`/api/...`) y los archivos estáticos (`/public`) — sin
   necesitar un proyecto Pages aparte.
 - **1 base D1 compartida**, multi-tenant por fila: toda tabla tiene `business_id`. Cada negocio
-  (tenant) se identifica por un `slug` en la URL: `tuapp.workers.dev/t/mi-negocio`.
+  (tenant) se identifica por un `slug` en la URL: `tuapp.workers.dev/mi-negocio` (reserva) y
+  `tuapp.workers.dev/mi-negocio/admin` (panel de personal).
 - **Evolution API** (WhatsApp) corre en **tu propio servidor**, no en Cloudflare — Workers no
   puede alojar procesos persistentes tipo Baileys. El Worker solo le hace peticiones HTTP
   (`src/lib/whatsapp.js`), para avisos de citas (agendada/cancelada/reagendar/mover/reabrir).
@@ -17,9 +18,9 @@ Sin frameworks ni bundler: JavaScript plano en módulos ES, para que sea fácil 
   pasos intermedios ni proveedor de correo.
 - **Super admin de la plataforma**: es quien puede crear negocios nuevos, ver todos los negocios
   (con sus servicios y especialistas) y administrar sus usuarios, incluyendo cambiar el tipo
-  (dueño/personal) de cualquiera. La primera vez que se visita `/setup.html` no existe todavía,
-  así que la página pide registrarlo (correo + PIN); de ahí en adelante pide iniciar sesión con
-  esa cuenta antes de mostrar el panel (`src/routes/platform.js`).
+  (dueño/personal) de cualquiera. Vive en `/admin` — la primera vez que se visita no existe
+  todavía, así que la página pide registrarlo (correo + PIN); de ahí en adelante pide iniciar
+  sesión con esa cuenta antes de mostrar el panel (`src/routes/platform.js`).
 - **WhatsApp por negocio**: cada negocio puede prender/apagar el envío de avisos por WhatsApp y
   tiene su propio link de webhook para pegar en Evolution API (Ajustes → WhatsApp en el panel del
   negocio, `src/routes/webhook.js`).
@@ -28,7 +29,7 @@ Sin frameworks ni bundler: JavaScript plano en módulos ES, para que sea fácil 
 
 ```
 src/
-  index.js            Punto de entrada: rutas bonitas (/t/:slug) + despacho de la API
+  index.js            Punto de entrada: rutas bonitas (/:slug, /:slug/admin, /admin) + despacho de la API
   lib/                 Código compartido: router, D1, auth, PIN, WhatsApp, plantillas, CRUD genérico
   routes/               Un archivo por grupo de endpoints (platform.js = super admin)
 public/                Frontend (HTML+JS+CSS planos, sin build)
@@ -89,10 +90,10 @@ npm run db:migrate:remote
 
 ## Crear el primer negocio
 
-Visita `/setup.html`. La primera vez te pide registrar la cuenta de super admin (nombre, correo,
-PIN); después de eso, esa misma pantalla pide iniciar sesión con esa cuenta y ahí sí llena el
+Visita `/admin`. La primera vez te pide registrar la cuenta de super admin (nombre, correo, PIN);
+después de eso, esa misma pantalla pide iniciar sesión con esa cuenta y ahí sí llena el
 formulario del negocio (nombre, slug, dueño y su PIN) — te da dos enlaces: la página de reservas
-del cliente y el panel de administración.
+del cliente (`/tu-negocio`) y el panel de administración (`/tu-negocio/admin`).
 
 ## Qué falta / roadmap
 

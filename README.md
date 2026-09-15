@@ -63,13 +63,18 @@ El payload que arma `src/lib/whatsapp.js` asume el contrato de Evolution API v2
 (`POST /message/sendText/{instance}`, header `apikey`). Si tu versión usa otro formato, es el
 único archivo que hay que tocar.
 
-### GitHub Actions (deploy automático)
+### Deploy automático
 
-En **Settings → Secrets → Actions** del repo, agrega:
-- `CLOUDFLARE_API_TOKEN` (permiso de edición de Workers + D1)
-- `CLOUDFLARE_ACCOUNT_ID`
+El repo está conectado a **Cloudflare Workers Builds**: cada push a `main` dispara un deploy
+solo (Cloudflare clona el repo, instala dependencias y corre `wrangler deploy`). No hace falta
+GitHub Actions ni secretos en GitHub — se administra desde el dashboard de Cloudflare, en
+Workers & Pages → `control-de-citas` → Settings → Build.
 
-Cada push a `main` aplica las migraciones pendientes y despliega.
+Ese deploy automático **no** aplica migraciones nuevas de D1 por sí solo. Si agregas una
+migración (`migrations/0002_*.sql`), aplícala a mano antes o después del push:
+```bash
+npm run db:migrate:remote
+```
 
 ## Crear el primer negocio
 

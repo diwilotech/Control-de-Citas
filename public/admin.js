@@ -1,4 +1,20 @@
-const { api, toast, tenantSlug } = window.CDC;
+// Si app.js no cargó (red, extensión del navegador, caché vieja), CDC.api/toast quedan undefined
+// y cada botón fallaría en silencio. toast tiene su propia implementación de respaldo acá mismo
+// para que el error SIEMPRE se vea, nunca se quede sin ningún aviso.
+const CDC = window.CDC || {};
+const api = CDC.api;
+const tenantSlug = CDC.tenantSlug;
+const toast = CDC.toast || function (msg, ok = true) {
+  const el = document.createElement("div");
+  el.textContent = msg;
+  el.style.cssText = `position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:2000;padding:.6rem 1.1rem;border-radius:12px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.18);max-width:90%;text-align:center;color:#fff;background:${ok ? "#0a3a3d" : "#c0472f"};`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+};
+if (typeof api !== "function") {
+  toast("No cargó app.js. Recarga con Ctrl+Shift+R o revisa la consola del navegador (F12).", false);
+}
+
 let servicesCache = [];
 let specialistsCache = [];
 

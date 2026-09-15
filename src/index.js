@@ -34,8 +34,10 @@ export default {
       // /t/:slug/admin -> panel de staff, /t/:slug -> reserva pública del cliente
       const parts = url.pathname.split("/").filter(Boolean);
       if (parts[0] === "t" && parts[1]) {
-        if (parts[2] === "admin") return serveAsset(env, request, "/admin.html");
-        return serveAsset(env, request, "/index.html");
+        // Sin extensión: Assets sirve el .html directo (200), en vez de redirigir
+        // como hace con las rutas .html explícitas — eso le hacía perder el slug al cliente.
+        if (parts[2] === "admin") return serveAsset(env, request, "/admin");
+        return serveAsset(env, request, "/index");
       }
       return env.ASSETS.fetch(request);
     }

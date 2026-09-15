@@ -1,7 +1,6 @@
 // Plantillas por defecto que se siembran al crear un negocio (editables luego en /staff/templates).
-// Placeholders: {cliente} {servicio} {fecha} {hora} {fechaNueva} {horaNueva} {codigo}
+// Placeholders: {cliente} {servicio} {fecha} {hora} {fechaNueva} {horaNueva}
 export const DEFAULT_TEMPLATES = {
-  otp: "Tu código de acceso a {negocio} es {codigo}. Vence en 10 minutos.",
   booked: "Hola {cliente}, tu cita de {servicio} quedó agendada para el {fecha} a las {hora}. ¡Te esperamos!",
   cancel: "Hola {cliente}, tu cita de {servicio} del {fecha} a las {hora} ha sido cancelada. Contáctanos para agendar una nueva.",
   reschedule: "Hola {cliente}, necesitamos reprogramar tu cita de {servicio} del {fecha} a las {hora}. Por favor elige un nuevo horario cuando puedas.",

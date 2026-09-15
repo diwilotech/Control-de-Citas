@@ -10,44 +10,133 @@
 <body>
 <main class="container py-5" style="max-width:460px;">
   <div class="card-panel p-4">
-    <h1 class="h4 fw-bold display-font mb-3">Crear tu negocio</h1>
-    <div id="form">
-      <label class="label-xs d-block mb-1">Nombre del negocio</label>
-      <input class="form-control mb-2" id="businessName">
-      <label class="label-xs d-block mb-1">Identificador en la URL (slug)</label>
-      <input class="form-control mb-2" id="slug" placeholder="mi-negocio">
+
+    <!-- Primer arranque: no existe super admin todavía -->
+    <div id="registerView" style="display:none;">
+      <h1 class="h4 fw-bold display-font mb-1">Crear cuenta de super admin</h1>
+      <p class="text-muted small mb-3">Es la primera vez que se usa el sistema. Esta cuenta es la
+        única que puede crear negocios (tenants) nuevos.</p>
       <label class="label-xs d-block mb-1">Tu nombre</label>
-      <input class="form-control mb-2" id="ownerName">
+      <input class="form-control mb-2" id="adminName">
       <label class="label-xs d-block mb-1">Tu correo</label>
-      <input type="email" class="form-control mb-2" id="ownerEmail">
-      <label class="label-xs d-block mb-1">Tu celular (para recibir el código de acceso por WhatsApp)</label>
-      <input type="tel" class="form-control mb-3" id="ownerPhone">
-      <button class="btn btn-brand w-100" id="createBtn">Crear</button>
+      <input type="email" class="form-control mb-2" id="adminEmail" value="yomar006">
+      <label class="label-xs d-block mb-1">PIN (4-8 dígitos)</label>
+      <input type="password" inputmode="numeric" maxlength="8" class="form-control mb-3" id="adminPin">
+      <button class="btn btn-brand w-100" id="registerBtn">Crear cuenta de super admin</button>
     </div>
-    <div id="done" style="display:none;">
-      <p class="text-muted">Tu negocio quedó creado. Guarda estos enlaces:</p>
-      <p><strong>Reservas de clientes:</strong> <a id="linkClient" target="_blank"></a></p>
-      <p><strong>Panel de administración:</strong> <a id="linkAdmin" target="_blank"></a></p>
+
+    <!-- Ya existe super admin, pero no hay sesión activa en este navegador -->
+    <div id="loginView" style="display:none;">
+      <h1 class="h4 fw-bold display-font mb-3">Iniciar sesión</h1>
+      <label class="label-xs d-block mb-1">Correo</label>
+      <input type="email" class="form-control mb-2" id="loginEmail">
+      <label class="label-xs d-block mb-1">PIN</label>
+      <input type="password" inputmode="numeric" maxlength="8" class="form-control mb-3" id="loginPin">
+      <button class="btn btn-brand w-100" id="loginBtn">Entrar</button>
     </div>
+
+    <!-- Con sesión de super admin: crear negocios -->
+    <div id="businessView" style="display:none;">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <h1 class="h4 fw-bold display-font mb-0">Crear negocio</h1>
+        <button class="btn btn-sm btn-outline-dark" id="logoutBtn">Salir</button>
+      </div>
+      <div id="form">
+        <label class="label-xs d-block mb-1">Nombre del negocio</label>
+        <input class="form-control mb-2" id="businessName">
+        <label class="label-xs d-block mb-1">Identificador en la URL (slug)</label>
+        <input class="form-control mb-2" id="slug" placeholder="mi-negocio">
+        <label class="label-xs d-block mb-1">Nombre del dueño</label>
+        <input class="form-control mb-2" id="ownerName">
+        <label class="label-xs d-block mb-1">Correo del dueño</label>
+        <input type="email" class="form-control mb-2" id="ownerEmail">
+        <label class="label-xs d-block mb-1">PIN del dueño (4-8 dígitos)</label>
+        <input type="password" inputmode="numeric" maxlength="8" class="form-control mb-2" id="ownerPin">
+        <label class="label-xs d-block mb-1">Celular del dueño (para avisos por WhatsApp)</label>
+        <input type="tel" class="form-control mb-3" id="ownerPhone">
+        <button class="btn btn-brand w-100" id="createBtn">Crear</button>
+      </div>
+      <div id="done" style="display:none;">
+        <p class="text-muted">Tu negocio quedó creado. Guarda estos enlaces:</p>
+        <p><strong>Reservas de clientes:</strong> <a id="linkClient" target="_blank"></a></p>
+        <p><strong>Panel de administración:</strong> <a id="linkAdmin" target="_blank"></a></p>
+        <button class="btn btn-outline-dark w-100 mt-2" id="createAnotherBtn">Crear otro negocio</button>
+      </div>
+    </div>
+
   </div>
 </main>
 <script src="app.js"></script>
 <script>
+const { apiRoot, toast } = window.CDC;
+const views = ["registerView", "loginView", "businessView"];
+function showView(id) {
+  for (const v of views) document.getElementById(v).style.display = v === id ? "block" : "none";
+}
+
+async function boot() {
+  const { hasAdmin } = await apiRoot("/admin/status");
+  if (!hasAdmin) return showView("registerView");
+  try {
+    await apiRoot("/admin/me");
+    showView("businessView");
+  } catch {
+    showView("loginView");
+  }
+}
+boot();
+
+document.getElementById("registerBtn").onclick = async () => {
+  const body = {
+    name: document.getElementById("adminName").value.trim(),
+    email: document.getElementById("adminEmail").value.trim(),
+    pin: document.getElementById("adminPin").value.trim(),
+  };
+  if (!body.name || !body.email) return toast("Faltan tu nombre y correo.", false);
+  try {
+    await apiRoot("/admin/register", { method: "POST", body });
+    showView("businessView");
+  } catch (e) { toast(e.message, false); }
+};
+
+document.getElementById("loginBtn").onclick = async () => {
+  const body = {
+    email: document.getElementById("loginEmail").value.trim(),
+    pin: document.getElementById("loginPin").value.trim(),
+  };
+  try {
+    await apiRoot("/admin/login", { method: "POST", body });
+    showView("businessView");
+  } catch (e) { toast(e.message, false); }
+};
+
+document.getElementById("logoutBtn").onclick = async () => {
+  await apiRoot("/admin/logout", { method: "POST" });
+  showView("loginView");
+};
+
 document.getElementById("createBtn").onclick = async () => {
   const body = {
     businessName: document.getElementById("businessName").value.trim(),
     slug: document.getElementById("slug").value.trim().toLowerCase(),
     ownerName: document.getElementById("ownerName").value.trim(),
     ownerEmail: document.getElementById("ownerEmail").value.trim(),
+    ownerPin: document.getElementById("ownerPin").value.trim(),
     ownerPhone: document.getElementById("ownerPhone").value.trim(),
   };
-  const res = await fetch("/api/setup", { method: "POST", headers: {"content-type":"application/json"}, body: JSON.stringify(body) });
-  const data = await res.json();
-  if (!res.ok) return CDC.toast(data.error || "Error", false);
-  document.getElementById("form").style.display = "none";
-  document.getElementById("done").style.display = "block";
-  document.getElementById("linkClient").href = document.getElementById("linkClient").textContent = `${location.origin}/t/${body.slug}`;
-  document.getElementById("linkAdmin").href = document.getElementById("linkAdmin").textContent = `${location.origin}/t/${body.slug}/admin`;
+  try {
+    await apiRoot("/setup", { method: "POST", body });
+    document.getElementById("form").style.display = "none";
+    document.getElementById("done").style.display = "block";
+    document.getElementById("linkClient").href = document.getElementById("linkClient").textContent = `${location.origin}/t/${body.slug}`;
+    document.getElementById("linkAdmin").href = document.getElementById("linkAdmin").textContent = `${location.origin}/t/${body.slug}/admin`;
+  } catch (e) { toast(e.message, false); }
+};
+
+document.getElementById("createAnotherBtn").onclick = () => {
+  for (const id of ["businessName","slug","ownerName","ownerEmail","ownerPin","ownerPhone"]) document.getElementById(id).value = "";
+  document.getElementById("done").style.display = "none";
+  document.getElementById("form").style.display = "block";
 };
 </script>
 </body>

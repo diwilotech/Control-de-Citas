@@ -38,7 +38,7 @@ export function registerSettings(router) {
     return json({ ok: true });
   });
 
-  // Plantillas de mensajes (cancel/reschedule/move/reopen/otp/booked).
+  // Plantillas de mensajes (cancel/reschedule/move/reopen/booked).
   router.get("/api/:slug/staff/templates", async (request, env, ctx) => {
     const rows = await all(env, `SELECT key, body FROM message_templates WHERE business_id=?`, ctx.business.id);
     const map = { ...DEFAULT_TEMPLATES };

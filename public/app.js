@@ -6,10 +6,8 @@ function tenantSlug() {
   return new URLSearchParams(location.search).get("t");
 }
 
-async function api(path, opts = {}) {
-  const slug = tenantSlug();
-  if (!slug) throw new Error("Falta el negocio en la URL (usa /t/tu-negocio).");
-  const res = await fetch(`/api/${slug}${path}`, {
+async function request(url, opts = {}) {
+  const res = await fetch(url, {
     method: opts.method || "GET",
     headers: { "content-type": "application/json" },
     credentials: "include",
@@ -18,6 +16,17 @@ async function api(path, opts = {}) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
   return data;
+}
+
+async function api(path, opts = {}) {
+  const slug = tenantSlug();
+  if (!slug) throw new Error("Falta el negocio en la URL (usa /t/tu-negocio).");
+  return request(`/api/${slug}${path}`, opts);
+}
+
+// Endpoints que no son de un negocio (el super admin de la plataforma: /api/admin/...).
+async function apiRoot(path, opts = {}) {
+  return request(`/api${path}`, opts);
 }
 
 function toast(msg, ok = true) {
@@ -35,4 +44,4 @@ function toast(msg, ok = true) {
   el._t = setTimeout(() => (el.style.display = "none"), 3200);
 }
 
-window.CDC = { api, tenantSlug, toast };
+window.CDC = { api, apiRoot, tenantSlug, toast };

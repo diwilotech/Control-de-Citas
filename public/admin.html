@@ -22,16 +22,11 @@
   <!-- LOGIN -->
   <div id="loginView" class="card-panel p-4 mx-auto" style="max-width:400px;">
     <h2 class="h5 fw-bold display-font mb-3">Iniciar sesión</h2>
-    <div id="stepEmail">
-      <label class="label-xs d-block mb-1">Correo</label>
-      <input type="email" id="loginEmail" class="form-control mb-3">
-      <button class="btn btn-brand w-100" id="requestCodeBtn">Enviar código por WhatsApp</button>
-    </div>
-    <div id="stepCode" style="display:none;">
-      <label class="label-xs d-block mb-1">Código recibido</label>
-      <input type="text" id="loginCode" maxlength="6" class="form-control mb-3" style="letter-spacing:.4em;text-align:center;">
-      <button class="btn btn-brand w-100" id="verifyCodeBtn">Entrar</button>
-    </div>
+    <label class="label-xs d-block mb-1">Correo</label>
+    <input type="email" id="loginEmail" class="form-control mb-2">
+    <label class="label-xs d-block mb-1">PIN</label>
+    <input type="password" inputmode="numeric" id="loginPin" maxlength="8" class="form-control mb-3" style="letter-spacing:.4em;text-align:center;">
+    <button class="btn btn-brand w-100" id="loginBtn">Entrar</button>
   </div>
 
   <!-- APP -->

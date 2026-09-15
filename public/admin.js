@@ -11,22 +11,12 @@ async function boot(){
   }
 }
 
-document.getElementById("requestCodeBtn").onclick = async () => {
+document.getElementById("loginBtn").onclick = async () => {
   const email = document.getElementById("loginEmail").value.trim();
-  if (!email) return toast("Escribe tu correo.", false);
+  const pin = document.getElementById("loginPin").value.trim();
+  if (!email || !pin) return toast("Escribe tu correo y tu PIN.", false);
   try {
-    await api("/auth/request-code", { method: "POST", body: { email } });
-    document.getElementById("stepEmail").style.display = "none";
-    document.getElementById("stepCode").style.display = "block";
-    toast("Código enviado por WhatsApp.");
-  } catch (e) { toast(e.message, false); }
-};
-
-document.getElementById("verifyCodeBtn").onclick = async () => {
-  const email = document.getElementById("loginEmail").value.trim();
-  const code = document.getElementById("loginCode").value.trim();
-  try {
-    const { user } = await api("/auth/verify-code", { method: "POST", body: { email, code } });
+    const { user } = await api("/auth/login", { method: "POST", body: { email, pin } });
     showApp(user);
   } catch (e) { toast(e.message, false); }
 };
@@ -222,7 +212,7 @@ async function loadSettings(){
     document.getElementById("setCloseHour").value = biz.close_hour;
   }
   const templates = await api("/staff/templates").catch(() => ({}));
-  const labels = { otp:"Código de acceso", booked:"Cita agendada", cancel:"Cancelación", reschedule:"Pedir reagendar", move:"Mover cita", reopen:"Reabrir cita" };
+  const labels = { booked:"Cita agendada", cancel:"Cancelación", reschedule:"Pedir reagendar", move:"Mover cita", reopen:"Reabrir cita" };
   document.getElementById("templatesForm").innerHTML = Object.entries(templates).map(([key, body]) => `
     <label class="label-xs d-block mb-1">${labels[key] || key}</label>
     <textarea class="form-control mb-3" rows="2" data-key="${key}">${body}</textarea>`).join("") +

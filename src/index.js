@@ -4,6 +4,7 @@ import { resolveBusiness } from "./lib/tenant.js";
 import { requireStaff } from "./lib/auth.js";
 
 import { registerSetup } from "./routes/setup.js";
+import { registerPlatform } from "./routes/platform.js";
 import { registerAuth } from "./routes/auth.js";
 import { registerPublic } from "./routes/public.js";
 import { registerAppointments } from "./routes/appointments.js";
@@ -12,6 +13,7 @@ import { registerSettings } from "./routes/settings.js";
 
 const router = new Router();
 registerSetup(router);
+registerPlatform(router);
 registerAuth(router);
 registerPublic(router);
 registerAppointments(router);

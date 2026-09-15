@@ -11,20 +11,23 @@ Sin frameworks ni bundler: JavaScript plano en módulos ES, para que sea fácil 
   (tenant) se identifica por un `slug` en la URL: `tuapp.workers.dev/t/mi-negocio`.
 - **Evolution API** (WhatsApp) corre en **tu propio servidor**, no en Cloudflare — Workers no
   puede alojar procesos persistentes tipo Baileys. El Worker solo le hace peticiones HTTP
-  (`src/lib/whatsapp.js`).
-- **Sin contraseñas**: el personal entra con correo + un código de 6 dígitos que se envía por
-  WhatsApp (vía Evolution API) al celular registrado del usuario. No hay proveedor de correo
-  conectado todavía — es la opción que pediste mientras montas esa parte de la infraestructura.
+  (`src/lib/whatsapp.js`), para avisos de citas (agendada/cancelada/reagendar/mover/reabrir).
+- **Login con correo + PIN**: tanto el super admin de la plataforma como el personal de cada
+  negocio entran con su correo y un PIN de 4-8 dígitos (hasheado con salt, `src/lib/pin.js`), sin
+  pasos intermedios ni proveedor de correo.
+- **Super admin de la plataforma**: es quien puede crear negocios nuevos. La primera vez que se
+  visita `/setup.html` no existe todavía, así que la página pide registrarlo (correo + PIN); de
+  ahí en adelante `/setup.html` pide iniciar sesión con esa cuenta antes de crear un negocio.
 
 ## Estructura
 
 ```
 src/
   index.js            Punto de entrada: rutas bonitas (/t/:slug) + despacho de la API
-  lib/                 Código compartido: router, D1, auth, WhatsApp, plantillas, CRUD genérico
-  routes/               Un archivo por grupo de endpoints
+  lib/                 Código compartido: router, D1, auth, PIN, WhatsApp, plantillas, CRUD genérico
+  routes/               Un archivo por grupo de endpoints (platform.js = super admin)
 public/                Frontend (HTML+JS+CSS planos, sin build)
-migrations/0001_init.sql   Esquema completo (14 tablas)
+migrations/                Esquema (0001 inicial, 0002 login por PIN + super admin)
 ```
 
 `src/lib/crud.js` + `src/lib/db.js#makeResource` generan las rutas CRUD de servicios,
@@ -78,8 +81,10 @@ npm run db:migrate:remote
 
 ## Crear el primer negocio
 
-Visita `/setup.html`, llena el formulario (nombre, slug, tu correo y celular) y te da dos
-enlaces: la página de reservas del cliente y el panel de administración.
+Visita `/setup.html`. La primera vez te pide registrar la cuenta de super admin (nombre, correo,
+PIN); después de eso, esa misma pantalla pide iniciar sesión con esa cuenta y ahí sí llena el
+formulario del negocio (nombre, slug, dueño y su PIN) — te da dos enlaces: la página de reservas
+del cliente y el panel de administración.
 
 ## Qué falta / roadmap
 
@@ -88,6 +93,6 @@ avisar por WhatsApp), deliberadamente simple. Lo que quedó fuera para no compli
 
 - Editor visual de plano del local (arrastrar mesas) — hoy los espacios se crean con un formulario.
 - Vista de agenda tipo línea de tiempo — hoy es una lista cronológica del día.
-- Login por correo real (hoy es por WhatsApp) y Google OAuth.
+- Recuperar/reset de PIN olvidado (hoy no hay forma de resetearlo salvo a mano en D1) y Google OAuth.
 - Panel de "no-show" automático (marcar inasistencia).
 - Cobro/planes por negocio.

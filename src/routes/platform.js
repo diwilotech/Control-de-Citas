@@ -69,7 +69,7 @@ export function registerPlatform(router) {
     const business = await first(env, `SELECT * FROM businesses WHERE id=?`, ctx.params.id);
     if (!business) return error("Negocio no encontrado.", 404);
     const [users, services, specialists] = await Promise.all([
-      all(env, `SELECT id, email, name, role, phone, created_at FROM users WHERE business_id=? ORDER BY created_at`, business.id),
+      all(env, `SELECT id, email, name, role, phone, pin_hash, created_at FROM users WHERE business_id=? ORDER BY created_at`, business.id),
       all(env, `SELECT id, name, duration_min, price FROM services WHERE business_id=?`, business.id),
       all(env, `SELECT id, name FROM specialists WHERE business_id=?`, business.id),
     ]);
@@ -96,13 +96,29 @@ export function registerPlatform(router) {
     return json({ id }, { status: 201 });
   });
 
-  // Cambia el tipo de usuario (dueño/personal) dentro de un negocio.
+  // Cambia el tipo de usuario (dueño/personal) y/o le asigna un PIN nuevo dentro de un negocio
+  // (también sirve para ponerle PIN a usuarios creados antes de que existiera el login por PIN).
   router.patch("/api/admin/businesses/:id/users/:userId", async (request, env, ctx) => {
     const denied = await requirePlatformAdmin(request, env, ctx);
     if (denied) return denied;
-    const { role } = await readJson(request);
-    if (role !== "owner" && role !== "staff") return error("role debe ser 'owner' o 'staff'.");
-    await run(env, `UPDATE users SET role=? WHERE id=? AND business_id=?`, role, ctx.params.userId, ctx.params.id);
+    const { role, pin } = await readJson(request);
+
+    const fields = {};
+    if (role !== undefined) {
+      if (role !== "owner" && role !== "staff") return error("role debe ser 'owner' o 'staff'.");
+      fields.role = role;
+    }
+    if (pin !== undefined) {
+      if (!validatePinFormat(pin)) return error("El PIN debe tener entre 4 y 8 dígitos.");
+      const salt = randomSalt();
+      fields.pin_hash = await hashPin(pin, salt);
+      fields.pin_salt = salt;
+    }
+    const cols = Object.keys(fields);
+    if (!cols.length) return error("Nada que actualizar (manda role y/o pin).");
+
+    await run(env, `UPDATE users SET ${cols.map((c) => `${c}=?`).join(", ")} WHERE id=? AND business_id=?`,
+      ...cols.map((c) => fields[c]), ctx.params.userId, ctx.params.id);
     return json({ ok: true });
   });
 }

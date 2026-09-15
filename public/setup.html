@@ -230,21 +230,37 @@ async function loadBusinessDetail(id) {
 
 function renderDetailUsers(businessId, users) {
   document.getElementById("detailUsers").innerHTML = users.map((u) => `
-    <div class="d-flex justify-content-between align-items-center border rounded p-2">
+    <div class="d-flex justify-content-between align-items-center border rounded p-2 flex-wrap gap-2">
       <div>
         <div>${u.name}</div>
-        <div class="text-muted small">${u.email}</div>
+        <div class="text-muted small">${u.email}${u.pin_hash ? "" : " · sin PIN"}</div>
       </div>
-      <select class="form-select form-select-sm" style="width:auto;" data-id="${u.id}">
-        <option value="staff" ${u.role === "staff" ? "selected" : ""}>Personal</option>
-        <option value="owner" ${u.role === "owner" ? "selected" : ""}>Dueño</option>
-      </select>
+      <div class="d-flex align-items-center gap-2">
+        <select class="form-select form-select-sm" style="width:auto;" data-role-id="${u.id}">
+          <option value="staff" ${u.role === "staff" ? "selected" : ""}>Personal</option>
+          <option value="owner" ${u.role === "owner" ? "selected" : ""}>Dueño</option>
+        </select>
+        <input type="password" inputmode="numeric" maxlength="8" placeholder="PIN nuevo" class="form-control form-control-sm" style="width:110px;" data-pin-input="${u.id}">
+        <button class="btn btn-sm btn-outline-dark" data-pin-id="${u.id}" type="button">Fijar PIN</button>
+      </div>
     </div>`).join("") || '<p class="text-muted small mb-0">Sin usuarios todavía.</p>';
-  document.querySelectorAll("#detailUsers select").forEach((sel) => {
+  document.querySelectorAll("[data-role-id]").forEach((sel) => {
     sel.onchange = async () => {
       try {
-        await apiRoot(`/admin/businesses/${businessId}/users/${sel.dataset.id}`, { method: "PATCH", body: { role: sel.value } });
+        await apiRoot(`/admin/businesses/${businessId}/users/${sel.dataset.roleId}`, { method: "PATCH", body: { role: sel.value } });
         toast("Tipo de usuario actualizado.");
+      } catch (e) { toast(e.message, false); }
+    };
+  });
+  document.querySelectorAll("[data-pin-id]").forEach((btn) => {
+    btn.onclick = async () => {
+      const input = document.querySelector(`[data-pin-input="${btn.dataset.pinId}"]`);
+      const pin = input.value.trim();
+      if (!pin) return toast("Escribe el PIN nuevo.", false);
+      try {
+        await apiRoot(`/admin/businesses/${businessId}/users/${btn.dataset.pinId}`, { method: "PATCH", body: { pin } });
+        toast("PIN actualizado.");
+        loadBusinessDetail(businessId);
       } catch (e) { toast(e.message, false); }
     };
   });

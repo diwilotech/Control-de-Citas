@@ -74,7 +74,11 @@
 </main>
 <script src="app.js"></script>
 <script>
+try { // si algo de acá abajo revienta (p.ej. app.js no cargó), no se queda pegado en "Cargando…"
+
 const { apiRoot, toast } = window.CDC;
+if (typeof apiRoot !== "function") throw new Error("No cargó app.js. Revisa la consola (F12) o recarga con Ctrl+Shift+R.");
+
 const views = ["registerView", "loginView", "businessView"];
 function showView(id) {
   for (const v of views) document.getElementById(v).style.display = v === id ? "block" : "none";
@@ -244,6 +248,11 @@ function renderDetailUsers(businessId, users) {
       } catch (e) { toast(e.message, false); }
     };
   });
+}
+
+} catch (e) {
+  document.getElementById("bootStatus").textContent =
+    `Error al iniciar la página (${e.message}). Recarga con Ctrl+Shift+R o prueba en una ventana privada.`;
 }
 </script>
 </body>

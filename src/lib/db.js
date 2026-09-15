@@ -27,8 +27,11 @@ export function makeResource(table, fields) {
     },
     async create(env, businessId, data) {
       const id = uid();
-      const cols = ["id", "business_id", ...fields];
-      const vals = [id, businessId, ...fields.map((f) => normalize(data[f]))];
+      // Solo se insertan las columnas que mandó el cliente; las que no, quedan fuera del INSERT
+      // para que aplique el DEFAULT de la tabla en vez de guardar NULL explícito.
+      const present = fields.filter((f) => data[f] !== undefined);
+      const cols = ["id", "business_id", ...present];
+      const vals = [id, businessId, ...present.map((f) => normalize(data[f]))];
       const placeholders = cols.map(() => "?").join(",");
       await run(env, `INSERT INTO ${table} (${cols.join(",")}) VALUES (${placeholders})`, ...vals);
       return this.get(env, businessId, id);

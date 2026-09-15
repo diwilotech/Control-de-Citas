@@ -9,122 +9,271 @@
 <link href="/styles.css" rel="stylesheet">
 </head>
 <body>
-<header class="topbar py-3 mb-4">
-  <div class="container"><span id="bizName" class="fw-bold fs-4 display-font">Reservar cita</span></div>
-</header>
 
-<main class="container" style="max-width:560px;">
-  <div id="noTenant" class="card-panel p-4 text-center" style="display:none;">
+<nav class="navbar navbar-expand-md" style="background:#0a3a3d;">
+  <div class="container">
+    <span class="navbar-brand d-flex align-items-center gap-2 text-white mb-0">
+      <span class="navbar-brand-mark"><i class="bi bi-calendar2-heart"></i></span>
+      <span class="fw-bold" id="bizName">Reservar cita</span>
+    </span>
+  </div>
+</nav>
+
+<div id="noTenant" class="container py-5" style="display:none;">
+  <div class="card-panel p-4 text-center mx-auto" style="max-width:460px;">
     <p class="text-muted mb-0">Esta página necesita el enlace de tu negocio, algo como <code>/tu-negocio</code>.</p>
   </div>
+</div>
 
-  <div id="bookingFlow" class="card-panel p-4">
-    <div class="mb-3">
-      <label class="label-xs d-block mb-1">Servicio</label>
-      <select id="serviceSel" class="form-select"></select>
-    </div>
-    <div class="mb-3">
-      <label class="label-xs d-block mb-1">Especialista</label>
-      <select id="specialistSel" class="form-select"></select>
-    </div>
-    <div class="mb-3">
-      <label class="label-xs d-block mb-1">Fecha</label>
-      <input type="date" id="dateInput" class="form-control">
-    </div>
+<div id="bookingFlow" class="container py-4 py-lg-5 content-area" style="display:none;">
 
-    <div id="slotsWrap" class="mb-3">
-      <label class="label-xs d-block mb-2">Horarios disponibles</label>
-      <div id="slots" class="d-flex flex-wrap gap-2"></div>
-    </div>
+  <div class="step-head"><span class="step-num">1</span><h2 class="h5 fw-bold mb-0">Elige el servicio</h2></div>
+  <div id="serviceList" class="lateral-scroll"></div>
 
-    <div id="clientForm" style="display:none;">
-      <hr>
-      <label class="label-xs d-block mb-1">Nombre completo</label>
-      <input type="text" id="clientName" class="form-control mb-2">
-      <div class="row g-2 mb-3">
-        <div class="col-6">
-          <label class="label-xs d-block mb-1">Correo (opcional)</label>
-          <input type="email" id="clientEmail" class="form-control">
-        </div>
-        <div class="col-6">
-          <label class="label-xs d-block mb-1">Celular (para WhatsApp)</label>
-          <input type="tel" id="clientPhone" class="form-control">
-        </div>
-      </div>
-      <button class="btn btn-brand w-100" id="confirmBtn">Confirmar cita</button>
-    </div>
+  <hr class="my-4">
+
+  <div class="step-head"><span class="step-num">2</span><h2 class="h5 fw-bold mb-0">Elige el especialista</h2></div>
+  <div id="specialistStrip" class="lateral-scroll"></div>
+
+  <hr class="my-4">
+
+  <div class="step-head"><span class="step-num">3</span><h2 class="h5 fw-bold mb-0">Elige fecha y hora</h2></div>
+  <div id="dayStrip" class="d-flex gap-2 lateral-scroll"></div>
+
+  <div class="card-panel p-3">
+    <p class="label-xs mb-2">Mañana</p>
+    <div class="d-flex flex-wrap gap-2 mb-3" id="slotsMorning"></div>
+    <p class="label-xs mb-2">Tarde</p>
+    <div class="d-flex flex-wrap gap-2" id="slotsAfternoon"></div>
   </div>
 
-  <div id="doneScreen" class="card-panel p-4 text-center" style="display:none;">
+  <div class="summary-panel mt-4">
+    <h2 class="h5 fw-bold mb-3">Resumen</h2>
+
+    <div id="summaryEmpty" class="text-muted small text-center py-3">
+      Elige servicio, especialista, día y hora para ver el resumen aquí.
+    </div>
+
+    <div id="summaryFilled" style="display:none;">
+      <div class="d-flex justify-content-between align-items-start border-bottom py-2">
+        <div>
+          <div class="fw-semibold" id="sumService"></div>
+          <div class="text-muted small" id="sumDuration"></div>
+        </div>
+        <div class="fw-bold" id="sumPrice"></div>
+      </div>
+      <div class="border-bottom py-2">
+        <div class="fw-semibold" id="sumSpecialist"></div>
+        <div class="text-muted small" id="sumRole"></div>
+      </div>
+      <div class="d-flex align-items-center justify-content-between mt-3 mb-3 p-3" style="background:#eaf1fb;border-radius:12px;">
+        <div>
+          <div class="fw-semibold small" id="sumDate"></div>
+          <div class="text-muted small" id="sumTime"></div>
+        </div>
+        <i class="bi bi-calendar3" style="color:#3a6bc7;font-size:1.2rem;"></i>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-2 mb-2">
+        <span class="text-muted fw-semibold">Total</span>
+        <span class="fw-bold fs-5" id="sumTotal"></span>
+      </div>
+
+      <label class="label-xs d-block mb-1">Tu nombre</label>
+      <input type="text" id="clientName" class="form-control mb-2">
+      <label class="label-xs d-block mb-1">Correo (opcional)</label>
+      <input type="email" id="clientEmail" class="form-control mb-2">
+      <label class="label-xs d-block mb-1">Celular (para WhatsApp)</label>
+      <input type="tel" id="clientPhone" class="form-control mb-3">
+
+      <button class="btn btn-brand w-100 py-2" id="confirmBtn">
+        <i class="bi bi-check2-circle"></i> Confirmar cita
+      </button>
+    </div>
+  </div>
+</div>
+
+<button class="fab-confirm" id="fabConfirm" style="display:none;" disabled>
+  <i class="bi bi-check2-circle"></i> Confirmar
+</button>
+
+<div id="doneScreen" class="container py-5" style="display:none;">
+  <div class="card-panel p-4 text-center mx-auto" style="max-width:460px;">
     <i class="bi bi-check-circle-fill text-success" style="font-size:2.5rem;"></i>
     <h3 class="display-font fw-bold mt-2">¡Listo!</h3>
-    <p class="text-muted">Tu cita quedó agendada. Te avisamos por WhatsApp si nos diste tu celular.</p>
+    <p class="text-muted mb-0">Tu cita quedó agendada. Te avisamos por WhatsApp si nos diste tu celular.</p>
   </div>
-</main>
+</div>
 
 <script src="/app.js"></script>
 <script>
 const { api, tenantSlug, toast } = window.CDC;
+
+// Paleta rotativa para las tarjetas de servicio (la base de datos no guarda foto/ícono por servicio).
+const SERVICE_THEMES = [
+  { gradient: "linear-gradient(135deg,#8a6b4f,#c9a37a)", icon: "bi-flower2" },
+  { gradient: "linear-gradient(135deg,#3d4a52,#7d97a3)", icon: "bi-scissors" },
+  { gradient: "linear-gradient(135deg,#4a3327,#8a5b3d)", icon: "bi-magic" },
+  { gradient: "linear-gradient(135deg,#7a5a92,#b998cf)", icon: "bi-hand-index-thumb" },
+  { gradient: "linear-gradient(135deg,#a3512b,#d9925f)", icon: "bi-palette" },
+];
+
 let business = null;
-let selectedSlot = null;
+const state = { serviceId: null, specialistId: null, date: null, time: null };
 
-async function init(){
-  if (!tenantSlug()){ document.getElementById("noTenant").style.display = "block"; document.getElementById("bookingFlow").style.display = "none"; return; }
+async function init() {
+  if (!tenantSlug()) { document.getElementById("noTenant").style.display = "block"; return; }
   business = await api("/public/business").catch((e) => { toast(e.message, false); return null; });
-  if (!business) return;
+  if (!business) { document.getElementById("noTenant").style.display = "block"; return; }
+
   document.getElementById("bizName").textContent = business.name;
-  document.getElementById("serviceSel").innerHTML = business.services.map(s => `<option value="${s.id}">${s.name} · ${s.duration_min} min</option>`).join("");
-  document.getElementById("dateInput").value = new Date().toISOString().slice(0,10);
-  renderSpecialists();
-  document.getElementById("serviceSel").onchange = () => { renderSpecialists(); loadSlots(); };
-  document.getElementById("specialistSel").onchange = loadSlots;
-  document.getElementById("dateInput").onchange = loadSlots;
+  document.getElementById("bookingFlow").style.display = "block";
   document.getElementById("confirmBtn").onclick = confirmBooking;
-  loadSlots();
+  document.getElementById("fabConfirm").onclick = confirmBooking;
+
+  renderServices();
+  renderDays();
+  updateSummary();
 }
 
-function renderSpecialists(){
-  const serviceId = document.getElementById("serviceSel").value;
-  const ids = business.specialistsByService[serviceId] || business.specialists.map(s=>s.id);
-  const list = business.specialists.filter(s => ids.includes(s.id));
-  document.getElementById("specialistSel").innerHTML = (list.length ? list : business.specialists)
-    .map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+function renderServices() {
+  document.getElementById("serviceList").innerHTML = business.services.map((s, i) => {
+    const theme = SERVICE_THEMES[i % SERVICE_THEMES.length];
+    return `
+    <div class="service-card ${state.serviceId === s.id ? "selected" : ""}" data-id="${s.id}">
+      <div class="service-photo" style="background-image:${theme.gradient}">
+        <span class="icon-chip"><i class="bi ${theme.icon}"></i></span>
+        <span class="check-chip"><i class="bi bi-check-lg"></i></span>
+      </div>
+      <div class="service-body">
+        <div class="name">${s.name}</div>
+        <div class="meta"><span><i class="bi bi-clock"></i> ${s.duration_min} min</span><span class="price">$${s.price}</span></div>
+      </div>
+    </div>`;
+  }).join("");
+  document.querySelectorAll("#serviceList .service-card").forEach((el) => (el.onclick = () => selectService(el.dataset.id)));
 }
 
-async function loadSlots(){
-  selectedSlot = null;
-  document.getElementById("clientForm").style.display = "none";
-  const serviceId = document.getElementById("serviceSel").value;
-  const specialistId = document.getElementById("specialistSel").value;
-  const date = document.getElementById("dateInput").value;
-  if (!serviceId || !specialistId || !date) return;
-  const { slots } = await api(`/public/availability?serviceId=${serviceId}&specialistId=${specialistId}&date=${date}`);
-  const wrap = document.getElementById("slots");
-  wrap.innerHTML = slots.length
-    ? slots.map(s => `<button class="btn slot-btn" data-slot="${s}">${s}</button>`).join("")
-    : `<p class="text-muted small mb-0">No hay horarios disponibles ese día.</p>`;
-  wrap.querySelectorAll(".slot-btn").forEach(btn => btn.onclick = () => {
-    wrap.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    selectedSlot = btn.dataset.slot;
-    document.getElementById("clientForm").style.display = "block";
+function renderSpecialists() {
+  const ids = business.specialistsByService[state.serviceId] || business.specialists.map((s) => s.id);
+  const list = business.specialists.filter((s) => ids.includes(s.id));
+  const shown = list.length ? list : business.specialists;
+  document.getElementById("specialistStrip").innerHTML = shown.map((sp) => `
+    <div class="specialist-card ${state.specialistId === sp.id ? "selected" : ""}" data-id="${sp.id}">
+      <div class="avatar-fill" style="background:${sp.color}">${sp.avatar}</div>
+      <div class="sname">${sp.name}</div>
+      ${sp.role ? `<div class="srole">${sp.role}</div>` : ""}
+    </div>`).join("");
+  document.querySelectorAll("#specialistStrip .specialist-card").forEach((el) => (el.onclick = () => selectSpecialist(el.dataset.id)));
+}
+
+function dayList() {
+  const dows = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+  const base = new Date();
+  return [0, 1, 2, 3, 4, 5, 6].map((i) => {
+    const d = new Date(base); d.setDate(base.getDate() + i);
+    return { iso: d.toISOString().slice(0, 10), label: i === 0 ? "HOY" : dows[d.getDay()], num: d.getDate() };
   });
 }
 
-async function confirmBooking(){
+function renderDays() {
+  const days = dayList();
+  if (!state.date) state.date = days[0].iso;
+  document.getElementById("dayStrip").innerHTML = days.map((d) => `
+    <div class="day-chip ${state.date === d.iso ? "selected" : ""}" data-iso="${d.iso}">
+      <div class="dow">${d.label}</div>
+      <div class="dnum">${d.num}</div>
+    </div>`).join("");
+  document.querySelectorAll("#dayStrip .day-chip").forEach((el) => (el.onclick = () => selectDay(el.dataset.iso)));
+}
+
+function selectService(id) {
+  state.serviceId = id;
+  state.specialistId = null;
+  state.time = null;
+  renderServices(); renderSpecialists(); loadSlots(); updateSummary();
+}
+function selectSpecialist(id) {
+  state.specialistId = id;
+  state.time = null;
+  renderSpecialists(); loadSlots(); updateSummary();
+}
+function selectDay(iso) {
+  state.date = iso;
+  state.time = null;
+  renderDays(); loadSlots(); updateSummary();
+}
+
+async function loadSlots() {
+  const morning = document.getElementById("slotsMorning");
+  const afternoon = document.getElementById("slotsAfternoon");
+  if (!state.serviceId || !state.specialistId || !state.date) {
+    morning.innerHTML = afternoon.innerHTML = "";
+    return;
+  }
+  const { slots } = await api(`/public/availability?serviceId=${state.serviceId}&specialistId=${state.specialistId}&date=${state.date}`)
+    .catch((e) => { toast(e.message, false); return { slots: [] }; });
+  const am = slots.filter((s) => s < "12:00");
+  const pm = slots.filter((s) => s >= "12:00");
+  morning.innerHTML = renderSlotButtons(am) || `<p class="text-muted small mb-0">Sin horarios en la mañana.</p>`;
+  afternoon.innerHTML = renderSlotButtons(pm) || `<p class="text-muted small mb-0">Sin horarios en la tarde.</p>`;
+  [morning, afternoon].forEach((wrap) => wrap.querySelectorAll(".slot-btn").forEach((btn) => (btn.onclick = () => {
+    document.querySelectorAll(".slot-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.time = btn.dataset.slot;
+    updateSummary();
+  })));
+}
+
+function renderSlotButtons(list) {
+  return list.map((s) => `<button class="btn slot-btn ${state.time === s ? "active" : ""}" data-slot="${s}">${s}</button>`).join("");
+}
+
+function updateSummary() {
+  const complete = state.serviceId && state.specialistId && state.time;
+  document.getElementById("summaryEmpty").style.display = complete ? "none" : "block";
+  document.getElementById("summaryFilled").style.display = complete ? "block" : "none";
+  document.getElementById("confirmBtn").disabled = !complete;
+  const fab = document.getElementById("fabConfirm");
+  fab.style.display = complete ? "flex" : "none";
+  fab.disabled = !complete;
+  if (!complete) return;
+
+  const service = business.services.find((s) => s.id === state.serviceId);
+  const specialist = business.specialists.find((s) => s.id === state.specialistId);
+  const d = dayList().find((x) => x.iso === state.date);
+
+  document.getElementById("sumService").textContent = service.name;
+  document.getElementById("sumDuration").textContent = service.duration_min + " min";
+  document.getElementById("sumPrice").textContent = "$" + service.price;
+  document.getElementById("sumSpecialist").textContent = specialist.name;
+  document.getElementById("sumRole").textContent = specialist.role || "";
+  document.getElementById("sumDate").textContent = `${d.label === "HOY" ? "Hoy" : d.label} ${d.num}`;
+  document.getElementById("sumTime").textContent = to12h(state.time);
+  document.getElementById("sumTotal").textContent = "$" + service.price;
+}
+
+function to12h(t) {
+  let [h, m] = t.split(":").map(Number);
+  const ap = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${h}:${String(m).padStart(2, "0")} ${ap}`;
+}
+
+async function confirmBooking() {
   const clientName = document.getElementById("clientName").value.trim();
-  if (!clientName || !selectedSlot) { toast("Escribe tu nombre y elige un horario.", false); return; }
+  if (!clientName || !state.time) { toast("Escribe tu nombre y elige un horario.", false); return; }
   try {
     await api("/public/book", { method: "POST", body: {
-      serviceId: document.getElementById("serviceSel").value,
-      specialistId: document.getElementById("specialistSel").value,
-      date: document.getElementById("dateInput").value,
-      start: selectedSlot,
+      serviceId: state.serviceId,
+      specialistId: state.specialistId,
+      date: state.date,
+      start: state.time,
       clientName,
       clientEmail: document.getElementById("clientEmail").value.trim(),
       clientPhone: document.getElementById("clientPhone").value.trim(),
     }});
     document.getElementById("bookingFlow").style.display = "none";
+    document.getElementById("fabConfirm").style.display = "none";
     document.getElementById("doneScreen").style.display = "block";
   } catch (e) { toast(e.message, false); }
 }

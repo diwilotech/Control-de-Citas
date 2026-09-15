@@ -8,7 +8,7 @@ export function registerPublic(router) {
   router.get("/api/:slug/public/business", async (request, env, ctx) => {
     const services = await all(env, `SELECT id, name, duration_min, price FROM services WHERE business_id=?`, ctx.business.id);
     const specialists = await all(env,
-      `SELECT id, name, avatar, color FROM specialists WHERE business_id=?`, ctx.business.id);
+      `SELECT id, name, role, avatar, color FROM specialists WHERE business_id=?`, ctx.business.id);
     const links = await all(env,
       `SELECT specialist_id, service_id FROM specialist_services ss
        JOIN specialists s ON s.id = ss.specialist_id WHERE s.business_id=?`, ctx.business.id);

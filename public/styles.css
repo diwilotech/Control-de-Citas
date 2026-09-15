@@ -17,3 +17,51 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 .appt-row.st-completed{ border-left-color:var(--muted); }
 .appt-row.st-cancelled, .appt-row.st-no-show{ border-left-color:var(--danger); opacity:.8; }
 .appt-row.st-reagendar{ border-left-color:var(--amber); }
+
+/* ---- Página de reserva del cliente (index.html) ---- */
+.navbar-brand-mark{ width:34px; height:34px; border-radius:9px; background:var(--accent); display:inline-flex; align-items:center; justify-content:center; color:var(--primary-dark); font-weight:800; }
+
+.step-head{ display:flex; align-items:center; gap:.6rem; margin-bottom:1rem; }
+.step-num{ width:28px; height:28px; border-radius:50%; background:var(--primary); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem; flex:0 0 auto; }
+
+.lateral-scroll{ display:flex; gap:1rem; overflow-x:auto; padding:.25rem .1rem 1rem; scroll-snap-type:x proximity; }
+.lateral-scroll::-webkit-scrollbar{ height:8px; }
+.lateral-scroll::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+
+.service-card{ flex:0 0 auto; width:200px; scroll-snap-align:start; cursor:pointer; border:1.5px solid var(--line); border-radius:16px; overflow:hidden; background:#fff; transition:border-color .15s ease, box-shadow .15s ease, transform .1s ease; }
+.service-card:hover{ transform:translateY(-2px); }
+.service-card.selected{ border-color:var(--primary); box-shadow:0 0 0 3px rgba(15,82,87,.1); }
+.service-photo{ height:100px; position:relative; display:flex; align-items:flex-start; justify-content:space-between; padding:.6rem; background-size:cover; background-position:center; color:#fff; }
+.service-photo .icon-chip{ width:32px; height:32px; border-radius:9px; background:rgba(10,20,18,.5); display:flex; align-items:center; justify-content:center; font-size:.9rem; }
+.service-photo .check-chip{ width:26px; height:26px; border-radius:50%; background:var(--primary); display:none; align-items:center; justify-content:center; font-size:.75rem; }
+.service-card.selected .check-chip{ display:flex; }
+.service-body{ padding:.7rem .9rem .9rem; }
+.service-body .name{ font-weight:700; margin-bottom:.3rem; }
+.service-body .meta{ display:flex; justify-content:space-between; color:var(--muted); font-size:.85rem; }
+.service-body .meta .price{ font-weight:700; color:var(--ink); }
+
+.specialist-card{ flex:0 0 auto; width:140px; text-align:center; cursor:pointer; scroll-snap-align:start; border:1.5px solid var(--line); border-radius:16px; padding:1rem .75rem; background:#fff; transition:border-color .15s ease, box-shadow .15s ease; }
+.specialist-card:hover{ border-color:var(--primary); }
+.specialist-card.selected{ border-color:var(--amber); box-shadow:0 0 0 3px rgba(224,163,57,.15); }
+.avatar-fill{ width:56px; height:56px; border-radius:50%; margin:0 auto .5rem; color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:1.05rem; }
+.specialist-card .sname{ font-weight:700; font-size:.88rem; }
+.specialist-card .srole{ color:var(--muted); font-size:.72rem; }
+
+.day-chip{ flex:0 0 auto; width:70px; text-align:center; padding:.6rem .3rem; cursor:pointer; border:1.5px solid var(--line); border-radius:12px; background:#fff; }
+.day-chip .dow{ font-size:.65rem; color:var(--muted); font-weight:600; text-transform:uppercase; }
+.day-chip .dnum{ font-weight:800; font-size:1.05rem; }
+.day-chip.selected{ background:var(--primary); border-color:var(--primary); color:#fff; }
+.day-chip.selected .dow{ color:rgba(255,255,255,.75); }
+
+.summary-panel{ background:#fff; border:1px solid var(--line); border-radius:18px; padding:1.3rem; box-shadow:0 12px 34px rgba(15,35,30,.1); }
+@media (min-width: 992px){
+  .content-area{ padding-right: calc(360px + 2.5rem); }
+  .summary-panel{ position:fixed; right:2rem; bottom:6.5rem; width:360px; max-height:calc(100vh - 8.5rem); overflow-y:auto; z-index:1030; }
+}
+@media (max-width: 991.98px){
+  .summary-panel{ margin-top:1.5rem; margin-bottom:5rem; }
+}
+
+.fab-confirm{ position:fixed; right:1.5rem; bottom:1.5rem; z-index:1040; background:#25D366; border:none; color:#fff; font-weight:700; padding:.85rem 1.4rem; border-radius:50px; align-items:center; gap:.55rem; box-shadow:0 10px 26px rgba(37,211,102,.4); transition:transform .12s ease, box-shadow .12s ease; }
+.fab-confirm:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 14px 30px rgba(37,211,102,.5); color:#fff; }
+.fab-confirm:disabled{ background:#b7bdb9; box-shadow:none; cursor:not-allowed; color:#eef0ee; }

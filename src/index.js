@@ -10,6 +10,7 @@ import { registerPublic } from "./routes/public.js";
 import { registerAppointments } from "./routes/appointments.js";
 import { registerResources } from "./routes/resources.js";
 import { registerSettings } from "./routes/settings.js";
+import { registerWebhook } from "./routes/webhook.js";
 
 const router = new Router();
 registerSetup(router);
@@ -19,6 +20,7 @@ registerPublic(router);
 registerAppointments(router);
 registerResources(router);
 registerSettings(router);
+registerWebhook(router);
 
 // Sirve un archivo estático concreto a través del binding de assets (para las rutas bonitas
 // /t/:slug y /t/:slug/admin, que no existen como archivo real).

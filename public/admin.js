@@ -1,4 +1,4 @@
-const { api, toast } = window.CDC;
+const { api, toast, tenantSlug } = window.CDC;
 let servicesCache = [];
 let specialistsCache = [];
 
@@ -210,6 +210,10 @@ async function loadSettings(){
   if (biz){
     document.getElementById("setOpenHour").value = biz.open_hour;
     document.getElementById("setCloseHour").value = biz.close_hour;
+    document.getElementById("setWhatsappEnabled").checked = !!biz.whatsapp_enabled;
+    document.getElementById("setEvoInstance").value = biz.evolution_instance || "";
+    document.getElementById("setEvoApiKey").value = biz.evolution_api_key || "";
+    document.getElementById("setWebhookUrl").value = `${location.origin}/api/${tenantSlug()}/webhook/evolution/${biz.webhook_token}`;
   }
   const templates = await api("/staff/templates").catch(() => ({}));
   const labels = { booked:"Cita agendada", cancel:"Cancelación", reschedule:"Pedir reagendar", move:"Mover cita", reopen:"Reabrir cita" };
@@ -230,6 +234,27 @@ document.getElementById("saveSettingsBtn").onclick = async () => {
     closeHour: Number(document.getElementById("setCloseHour").value),
   }});
   toast("Horario guardado.");
+};
+
+document.getElementById("saveWhatsappBtn").onclick = async () => {
+  await api("/staff/settings", { method: "PATCH", body: {
+    whatsappEnabled: document.getElementById("setWhatsappEnabled").checked,
+    evolutionInstance: document.getElementById("setEvoInstance").value.trim(),
+    evolutionApiKey: document.getElementById("setEvoApiKey").value.trim(),
+  }});
+  toast("WhatsApp guardado.");
+};
+
+document.getElementById("copyWebhookBtn").onclick = async () => {
+  await navigator.clipboard.writeText(document.getElementById("setWebhookUrl").value);
+  toast("Link copiado.");
+};
+
+document.getElementById("rotateWebhookBtn").onclick = async () => {
+  if (!confirm("El link anterior dejará de funcionar. ¿Generar uno nuevo?")) return;
+  const { webhookToken } = await api("/staff/webhook/rotate", { method: "POST" });
+  document.getElementById("setWebhookUrl").value = `${location.origin}/api/${tenantSlug()}/webhook/evolution/${webhookToken}`;
+  toast("Link nuevo generado. Actualízalo en Evolution API.");
 };
 
 async function deleteResource(path, id, reload){

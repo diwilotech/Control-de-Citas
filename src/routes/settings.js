@@ -9,12 +9,20 @@ export function registerSettings(router) {
     const b = await readJson(request);
     const fields = { name: b.name, open_hour: b.openHour, close_hour: b.closeHour,
       open_days: b.openDays ? JSON.stringify(b.openDays) : undefined,
-      evolution_instance: b.evolutionInstance, evolution_api_key: b.evolutionApiKey };
+      evolution_instance: b.evolutionInstance, evolution_api_key: b.evolutionApiKey,
+      whatsapp_enabled: b.whatsappEnabled === undefined ? undefined : (b.whatsappEnabled ? 1 : 0) };
     const present = Object.entries(fields).filter(([, v]) => v !== undefined);
     if (!present.length) return json(ctx.business);
     await run(env, `UPDATE businesses SET ${present.map(([k]) => `${k} = ?`).join(", ")} WHERE id = ?`,
       ...present.map(([, v]) => v), ctx.business.id);
     return json(await first(env, `SELECT * FROM businesses WHERE id=?`, ctx.business.id));
+  });
+
+  // Nuevo link de webhook (por si el anterior se filtró) — invalida el que estaba pegado en Evolution API.
+  router.post("/api/:slug/staff/webhook/rotate", async (request, env, ctx) => {
+    const token = uid();
+    await run(env, `UPDATE businesses SET webhook_token=? WHERE id=?`, token, ctx.business.id);
+    return json({ webhookToken: token });
   });
 
   // Excepciones de horario por fecha (del negocio si specialistId es null, o de un especialista).

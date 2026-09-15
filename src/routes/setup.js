@@ -24,7 +24,8 @@ export function registerSetup(router) {
     if (await resolveBusiness(env, slug)) return error("Ese slug ya está en uso.", 409);
 
     const businessId = uid();
-    await run(env, `INSERT INTO businesses (id, slug, name) VALUES (?,?,?)`, businessId, slug, body.businessName);
+    await run(env, `INSERT INTO businesses (id, slug, name, webhook_token) VALUES (?,?,?,?)`,
+      businessId, slug, body.businessName, uid());
 
     const userId = uid();
     const salt = randomSalt();

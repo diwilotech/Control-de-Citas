@@ -15,9 +15,14 @@ Sin frameworks ni bundler: JavaScript plano en módulos ES, para que sea fácil 
 - **Login con correo + PIN**: tanto el super admin de la plataforma como el personal de cada
   negocio entran con su correo y un PIN de 4-8 dígitos (hasheado con salt, `src/lib/pin.js`), sin
   pasos intermedios ni proveedor de correo.
-- **Super admin de la plataforma**: es quien puede crear negocios nuevos. La primera vez que se
-  visita `/setup.html` no existe todavía, así que la página pide registrarlo (correo + PIN); de
-  ahí en adelante `/setup.html` pide iniciar sesión con esa cuenta antes de crear un negocio.
+- **Super admin de la plataforma**: es quien puede crear negocios nuevos, ver todos los negocios
+  (con sus servicios y especialistas) y administrar sus usuarios, incluyendo cambiar el tipo
+  (dueño/personal) de cualquiera. La primera vez que se visita `/setup.html` no existe todavía,
+  así que la página pide registrarlo (correo + PIN); de ahí en adelante pide iniciar sesión con
+  esa cuenta antes de mostrar el panel (`src/routes/platform.js`).
+- **WhatsApp por negocio**: cada negocio puede prender/apagar el envío de avisos por WhatsApp y
+  tiene su propio link de webhook para pegar en Evolution API (Ajustes → WhatsApp en el panel del
+  negocio, `src/routes/webhook.js`).
 
 ## Estructura
 
@@ -27,7 +32,7 @@ src/
   lib/                 Código compartido: router, D1, auth, PIN, WhatsApp, plantillas, CRUD genérico
   routes/               Un archivo por grupo de endpoints (platform.js = super admin)
 public/                Frontend (HTML+JS+CSS planos, sin build)
-migrations/                Esquema (0001 inicial, 0002 login por PIN + super admin)
+migrations/                Esquema (0001 inicial, 0002 login por PIN + super admin, 0003 WhatsApp on/off + webhook)
 ```
 
 `src/lib/crud.js` + `src/lib/db.js#makeResource` generan las rutas CRUD de servicios,
@@ -60,7 +65,10 @@ npx wrangler secret put EVOLUTION_DEFAULT_INSTANCE # nombre de instancia por def
 
 Si cada negocio tendrá su propio número/instancia de WhatsApp, en vez de las variables globales
 guarda `evolution_instance` y `evolution_api_key` directamente en la fila de `businesses` (ya
-existen esas columnas) — desde `/staff/settings` (PATCH `evolutionInstance`/`evolutionApiKey`).
+existen esas columnas) — desde el panel del negocio, Ajustes → WhatsApp. Ahí mismo se puede
+apagar el envío de avisos por WhatsApp para ese negocio (`whatsapp_enabled`), y se muestra el
+link de webhook (`/api/:slug/webhook/evolution/:token`) para pegarlo en Evolution API → esa
+instancia → Webhook, así Evolution puede avisarle al Worker de eventos entrantes.
 
 El payload que arma `src/lib/whatsapp.js` asume el contrato de Evolution API v2
 (`POST /message/sendText/{instance}`, header `apikey`). Si tu versión usa otro formato, es el

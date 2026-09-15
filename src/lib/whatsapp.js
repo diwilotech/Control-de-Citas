@@ -6,6 +6,9 @@
 // Si tu instancia usa un contrato distinto, ajusta solo esta función — el resto de la app no
 // necesita cambiar (por eso vive en un único lugar).
 export async function sendWhatsApp(env, business, phone, text) {
+  if (!business.whatsapp_enabled) {
+    return { ok: false, skipped: true, error: "WhatsApp está desactivado para este negocio." };
+  }
   const baseUrl = env.EVOLUTION_API_URL;
   const instance = business.evolution_instance || env.EVOLUTION_DEFAULT_INSTANCE;
   const apiKey = business.evolution_api_key || env.EVOLUTION_API_KEY;

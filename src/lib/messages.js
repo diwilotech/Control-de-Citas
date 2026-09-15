@@ -26,7 +26,7 @@ export async function sendApptMessage(env, business, appt, templateKey, extra = 
 
   await run(env,
     `INSERT INTO appointment_messages (id, appointment_id, business_id, template_key, body, status) VALUES (?,?,?,?,?,?)`,
-    uid(), appt.id, business.id, templateKey, text, result.ok ? "sent" : "failed");
+    uid(), appt.id, business.id, templateKey, text, result.ok ? "sent" : result.skipped ? "skipped" : "failed");
 
   return result;
 }

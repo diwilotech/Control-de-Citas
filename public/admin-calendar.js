@@ -30,6 +30,14 @@ window.MonthCalendar = (function () {
     return !exceptionsCache.some((e) => e.specialist_id === specialistId && e.date === iso && e.closed);
   }
 
+  // Horario efectivo de UN especialista ese día: su propia excepción si tiene (puede ser un
+  // horario parcial, ej. solo medio día), si no el horario general del negocio ese día.
+  function specialistHours(specialistId, iso, dow) {
+    const ex = exceptionsCache.find((e) => e.specialist_id === specialistId && e.date === iso);
+    if (ex) return ex.closed ? { closed: true } : { closed: false, open: ex.open_hour, close: ex.close_hour };
+    return dayHours(iso, dow);
+  }
+
   async function render() {
     [businessCache, exceptionsCache, specialistsCache] = await Promise.all([
       api("/staff/settings").catch(() => null),
@@ -129,11 +137,24 @@ window.MonthCalendar = (function () {
 
     document.getElementById("dayPreviewStaffList").innerHTML = specialistsCache.map((sp) => {
       const working = isWorking(sp.id, iso);
-      return `<button type="button" class="chip ${working ? "active" : ""}" data-sp="${sp.id}">
-        <span class="mini-avatar" style="background:${sp.color}">${sp.avatar}</span> ${sp.name}${working ? "" : '<span class="text-muted"> · libre</span>'}
-      </button>`;
+      const hrs = specialistHours(sp.id, iso, d.getDay());
+      const hasCustomHours = exceptionsCache.some((e) => e.specialist_id === sp.id && e.date === iso && !e.closed);
+      return `<div class="d-flex align-items-center gap-2 flex-wrap">
+        <button type="button" class="chip ${working ? "active" : ""}" data-toggle-sp="${sp.id}" style="flex-shrink:0;">
+          <span class="mini-avatar" style="background:${sp.color}">${sp.avatar}</span> ${sp.name}${working ? "" : '<span class="text-muted"> · libre</span>'}
+        </button>
+        ${working ? `
+          <input type="number" min="0" max="23" class="form-control form-control-sm" style="width:60px;" id="spOpen-${sp.id}" value="${hrs.closed ? businessCache.open_hour : hrs.open}">
+          <span class="text-muted small">a</span>
+          <input type="number" min="0" max="23" class="form-control form-control-sm" style="width:60px;" id="spClose-${sp.id}" value="${hrs.closed ? businessCache.close_hour : hrs.close}">
+          <button class="btn btn-sm btn-outline-dark" data-save-sp-hours="${sp.id}">Guardar</button>
+          ${hasCustomHours ? `<button class="btn btn-sm btn-link text-danger p-0" data-reset-sp-hours="${sp.id}">Usar horario general</button>` : ""}
+        ` : ""}
+      </div>`;
     }).join("");
-    document.querySelectorAll("#dayPreviewStaffList .chip").forEach((el) => (el.onclick = () => toggleWorking(el.dataset.sp, iso)));
+    document.querySelectorAll("#dayPreviewStaffList [data-toggle-sp]").forEach((el) => (el.onclick = () => toggleWorking(el.dataset.toggleSp, iso)));
+    document.querySelectorAll("#dayPreviewStaffList [data-save-sp-hours]").forEach((el) => (el.onclick = () => saveSpecialistHours(el.dataset.saveSpHours, iso)));
+    document.querySelectorAll("#dayPreviewStaffList [data-reset-sp-hours]").forEach((el) => (el.onclick = () => resetSpecialistHours(el.dataset.resetSpHours, iso)));
 
     const { headHtml, bodyHtml, count } = await window.Agenda.buildDaySchedule(iso, specialistsCache);
     document.getElementById("dayPreviewCount").textContent = `${count} cita${count === 1 ? "" : "s"}`;
@@ -206,6 +227,26 @@ window.MonthCalendar = (function () {
       </div>`).join("");
     bulkModal = bulkModal || new bootstrap.Modal(document.getElementById("bulkReagendarModal"));
     bulkModal.show();
+  }
+
+  // Horario parcial de un especialista para ese día puntual (ej. "solo trabaja de 9 a 13") —
+  // reusa el mismo POST de excepciones que ya usa el horario general, solo que con specialistId.
+  async function saveSpecialistHours(specialistId, iso) {
+    const openHour = Number(document.getElementById(`spOpen-${specialistId}`).value);
+    const closeHour = Number(document.getElementById(`spClose-${specialistId}`).value);
+    if (!(closeHour > openHour)) return toast("La hora de cierre debe ser después de la apertura.", false);
+    await api("/staff/date-exceptions", { method: "POST", body: { date: iso, specialistId, closed: false, openHour, closeHour } });
+    toast("Horario de ese día actualizado.");
+    await render();
+    if (editingDayISO === iso) await populateDayPreview(iso);
+  }
+
+  async function resetSpecialistHours(specialistId, iso) {
+    const ex = exceptionsCache.find((e) => e.specialist_id === specialistId && e.date === iso);
+    if (ex) await api(`/staff/date-exceptions/${ex.id}`, { method: "DELETE" });
+    toast("Vuelve al horario general ese día.");
+    await render();
+    if (editingDayISO === iso) await populateDayPreview(iso);
   }
 
   async function applyDayOff(specialistId, iso, notify) {

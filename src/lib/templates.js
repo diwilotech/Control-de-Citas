@@ -1,5 +1,5 @@
 // Plantillas por defecto que se siembran al crear un negocio (editables luego en /staff/templates).
-// Placeholders: {cliente} {servicio} {fecha} {hora} {fechaNueva} {horaNueva}
+// Placeholders: {cliente} {servicio} {fecha} {hora} {fechaNueva} {horaNueva} {codigo} {link} {ventana}
 export const DEFAULT_TEMPLATES = {
   booked: "Hola {cliente}, tu cita de {servicio} quedó agendada para el {fecha} a las {hora}. ¡Te esperamos!",
   cancel: "Hola {cliente}, tu cita de {servicio} del {fecha} a las {hora} ha sido cancelada. Contáctanos para agendar una nueva.",
@@ -7,6 +7,11 @@ export const DEFAULT_TEMPLATES = {
   move: "Hola {cliente}, te proponemos mover tu cita de {servicio} del {fecha} {hora} a {fechaNueva} {horaNueva}. ¿Nos confirmas si te queda bien?",
   reopen: "Hola {cliente}, vimos que tu cita de {servicio} del {fecha} quedó cancelada. ¿Quieres que te ayudemos a agendar una nueva fecha?",
   reminder: "Hola {cliente}, te recordamos tu cita de {servicio} el {fecha} a las {hora}. ¡Te esperamos!",
+  confirmWhatsapp: "Hola {cliente}, tu cita de {servicio} para el {fecha} a las {hora} quedó reservada pero falta confirmarla. Responde este WhatsApp con el código {codigo} para confirmarla. Si no respondes en {ventana}h, el horario se libera.",
+  confirmEmail: "Hola {cliente}, tu cita de {servicio} para el {fecha} a las {hora} quedó reservada pero falta confirmarla. Haz clic para confirmarla: {link}\n\nSi no confirmas en {ventana}h, el horario se libera.",
+  confirmed: "¡Listo {cliente}! Tu cita de {servicio} quedó CONFIRMADA para el {fecha} a las {hora}. Consulta, reagenda o cancela aquí: {link}",
+  selfCancel: "Hola {cliente}, tu cita de {servicio} del {fecha} a las {hora} fue cancelada (nos avisaste desde tu link de citas).",
+  selfReschedule: "Hola {cliente}, recibimos tu solicitud para reagendar la cita de {servicio} del {fecha} a las {hora}. Nos pondremos en contacto para coordinar un nuevo horario.",
 };
 
 export function formatDateHuman(iso) {

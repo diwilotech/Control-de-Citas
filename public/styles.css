@@ -115,7 +115,7 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 .appt-card:hover{ box-shadow:0 2px 10px rgba(0,0,0,.08); }
 .appt-card.st-completed{ border-left-color:var(--muted); }
 .appt-card.st-cancelled, .appt-card.st-no-show{ border-left-color:var(--danger); opacity:.75; }
-.appt-card.st-reagendar{ border-left-color:var(--amber); }
+.appt-card.st-reagendar, .appt-card.st-pending{ border-left-color:var(--amber); }
 .appt-card .appt-time{ font-size:.72rem; font-weight:700; color:var(--muted); }
 .appt-card .appt-title{ font-weight:700; font-size:.9rem; }
 .appt-card .appt-meta{ font-size:.78rem; color:var(--muted); display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }

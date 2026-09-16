@@ -2,6 +2,7 @@ import { all, first, run, uid } from "../lib/db.js";
 import { json, error, readJson } from "../lib/http.js";
 import { DEFAULT_TEMPLATES } from "../lib/templates.js";
 import { sendWhatsApp } from "../lib/whatsapp.js";
+import { sendEmail } from "../lib/mailer.js";
 
 export function registerSettings(router) {
   router.get("/api/:slug/staff/settings", async (request, env, ctx) => json(ctx.business));
@@ -12,7 +13,9 @@ export function registerSettings(router) {
       open_days: b.openDays ? JSON.stringify(b.openDays) : undefined,
       evolution_url: b.evolutionUrl, evolution_instance: b.evolutionInstance, evolution_api_key: b.evolutionApiKey,
       whatsapp_country_code: b.whatsappCountryCode,
-      whatsapp_enabled: b.whatsappEnabled === undefined ? undefined : (b.whatsappEnabled ? 1 : 0) };
+      whatsapp_enabled: b.whatsappEnabled === undefined ? undefined : (b.whatsappEnabled ? 1 : 0),
+      gmail_user: b.gmailUser, gmail_app_password: b.gmailAppPassword,
+      confirm_window_hours: b.confirmWindowHours };
     const present = Object.entries(fields).filter(([, v]) => v !== undefined);
     if (!present.length) return json(ctx.business);
     await run(env, `UPDATE businesses SET ${present.map(([k]) => `${k} = ?`).join(", ")} WHERE id = ?`,
@@ -34,6 +37,16 @@ export function registerSettings(router) {
     if (!phone) return error("Falta el número.");
     const result = await sendWhatsApp(env, ctx.business, phone,
       `Mensaje de prueba de ${ctx.business.name} (Control de Citas). Si lo recibiste, WhatsApp está bien conectado. ✅`);
+    if (!result.ok) return error(result.error || "No se pudo enviar.", 502);
+    return json({ ok: true });
+  });
+
+  // Manda un correo de prueba (SMTP con el Gmail configurado), mismo patrón que el de WhatsApp.
+  router.post("/api/:slug/staff/email/test", async (request, env, ctx) => {
+    const { email } = await readJson(request);
+    if (!email) return error("Falta el correo.");
+    const result = await sendEmail(env, ctx.business, email, `Correo de prueba — ${ctx.business.name}`,
+      `Mensaje de prueba de ${ctx.business.name} (Control de Citas). Si lo recibiste, el correo está bien conectado. ✅`);
     if (!result.ok) return error(result.error || "No se pudo enviar.", 502);
     return json({ ok: true });
   });

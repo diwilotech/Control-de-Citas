@@ -79,11 +79,23 @@
       </div>
 
       <label class="label-xs d-block mb-1">Tu nombre</label>
-      <input type="text" id="clientName" class="form-control mb-2">
-      <label class="label-xs d-block mb-1">Correo (opcional)</label>
-      <input type="email" id="clientEmail" class="form-control mb-2">
-      <label class="label-xs d-block mb-1">Celular (para WhatsApp)</label>
-      <input type="tel" id="clientPhone" class="form-control mb-3">
+      <input type="text" id="clientName" class="form-control mb-3">
+
+      <label class="label-xs d-block mb-1">¿Cómo quieres confirmar tu cita?</label>
+      <div class="d-flex gap-2 mb-2">
+        <button type="button" class="chip flex-fill" id="channelWhatsappBtn"><i class="bi bi-whatsapp"></i> WhatsApp</button>
+        <button type="button" class="chip flex-fill" id="channelEmailBtn"><i class="bi bi-envelope"></i> Correo</button>
+      </div>
+      <div id="channelPhoneField">
+        <label class="label-xs d-block mb-1">Celular</label>
+        <input type="tel" id="clientPhone" class="form-control mb-1">
+        <p class="text-muted small mb-2">Te mandamos un código por WhatsApp para confirmar la reserva.</p>
+      </div>
+      <div id="channelEmailField" style="display:none;">
+        <label class="label-xs d-block mb-1">Correo</label>
+        <input type="email" id="clientEmail" class="form-control mb-1">
+        <p class="text-muted small mb-2">Te mandamos un link por correo para confirmar la reserva.</p>
+      </div>
 
       <button class="btn btn-brand w-100 py-2" id="confirmBtn">
         <i class="bi bi-check2-circle"></i> Confirmar cita
@@ -98,9 +110,9 @@
 
 <div id="doneScreen" class="container py-5" style="display:none;">
   <div class="card-panel p-4 text-center mx-auto" style="max-width:460px;">
-    <i class="bi bi-check-circle-fill text-success" style="font-size:2.5rem;"></i>
-    <h3 class="display-font fw-bold mt-2">¡Listo!</h3>
-    <p class="text-muted mb-0">Tu cita quedó agendada. Te avisamos por WhatsApp si nos diste tu celular.</p>
+    <i class="bi bi-hourglass-split" style="font-size:2.5rem;color:var(--amber);"></i>
+    <h3 class="display-font fw-bold mt-2">¡Ya casi!</h3>
+    <p class="text-muted mb-0" id="doneMsg">Te reservamos el horario. Falta confirmar.</p>
   </div>
 </div>
 
@@ -118,7 +130,15 @@ const SERVICE_THEMES = [
 ];
 
 let business = null;
-const state = { serviceId: null, specialistId: null, date: null, time: null };
+const state = { serviceId: null, specialistId: null, date: null, time: null, channel: "whatsapp" };
+
+function selectChannel(channel) {
+  state.channel = channel;
+  document.getElementById("channelWhatsappBtn").classList.toggle("active", channel === "whatsapp");
+  document.getElementById("channelEmailBtn").classList.toggle("active", channel === "email");
+  document.getElementById("channelPhoneField").style.display = channel === "whatsapp" ? "block" : "none";
+  document.getElementById("channelEmailField").style.display = channel === "email" ? "block" : "none";
+}
 
 async function init() {
   if (!tenantSlug()) { document.getElementById("noTenant").style.display = "block"; return; }
@@ -129,6 +149,9 @@ async function init() {
   document.getElementById("bookingFlow").style.display = "block";
   document.getElementById("confirmBtn").onclick = confirmBooking;
   document.getElementById("fabConfirm").onclick = confirmBooking;
+  document.getElementById("channelWhatsappBtn").onclick = () => selectChannel("whatsapp");
+  document.getElementById("channelEmailBtn").onclick = () => selectChannel("email");
+  selectChannel("whatsapp");
 
   renderServices();
   renderDays();
@@ -276,7 +299,11 @@ function to12h(t) {
 
 async function confirmBooking() {
   const clientName = document.getElementById("clientName").value.trim();
+  const clientPhone = document.getElementById("clientPhone").value.trim();
+  const clientEmail = document.getElementById("clientEmail").value.trim();
   if (!clientName || !state.time) { toast("Escribe tu nombre y elige un horario.", false); return; }
+  if (state.channel === "whatsapp" && !clientPhone) { toast("Escribe tu celular para mandarte el código por WhatsApp.", false); return; }
+  if (state.channel === "email" && !clientEmail) { toast("Escribe tu correo para mandarte el link de confirmación.", false); return; }
   try {
     await api("/public/book", { method: "POST", body: {
       serviceId: state.serviceId,
@@ -284,11 +311,15 @@ async function confirmBooking() {
       date: state.date,
       start: state.time,
       clientName,
-      clientEmail: document.getElementById("clientEmail").value.trim(),
-      clientPhone: document.getElementById("clientPhone").value.trim(),
+      clientEmail,
+      clientPhone,
+      channel: state.channel,
     }});
     document.getElementById("bookingFlow").style.display = "none";
     document.getElementById("fabConfirm").style.display = "none";
+    document.getElementById("doneMsg").textContent = state.channel === "whatsapp"
+      ? "Te mandamos un WhatsApp con un código — respóndelo para confirmar tu cita."
+      : "Te mandamos un correo con un link — haz clic ahí para confirmar tu cita.";
     document.getElementById("doneScreen").style.display = "block";
   } catch (e) { toast(e.message, false); }
 }

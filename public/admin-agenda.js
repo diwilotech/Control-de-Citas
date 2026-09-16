@@ -7,7 +7,7 @@ window.Agenda = (function () {
   const ROWPX = 150;
   const DOW_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const MES_LABELS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-  const STATUS_LABELS = { confirmed: "Confirmada", completed: "Completada", cancelled: "Cancelada", "no-show": "Inasistencia", reagendar: "Por reagendar" };
+  const STATUS_LABELS = { confirmed: "Confirmada", pending_confirmation: "Pendiente de confirmar", completed: "Completada", cancelled: "Cancelada", "no-show": "Inasistencia", reagendar: "Por reagendar" };
 
   let currentDate = new Date(); currentDate.setHours(0, 0, 0, 0);
   let viewMode = "day";
@@ -107,10 +107,10 @@ window.Agenda = (function () {
   function spaceLabel(id) { const s = spacesCache.find((s) => s.id === id); return s ? s.label : null; }
 
   function apptCardHTML(a, compact) {
-    const cls = { confirmed: "", completed: "st-completed", cancelled: "st-cancelled", "no-show": "st-no-show", reagendar: "st-reagendar" }[a.status] || "";
+    const cls = { confirmed: "", completed: "st-completed", cancelled: "st-cancelled", "no-show": "st-no-show", reagendar: "st-reagendar", pending_confirmation: "st-pending" }[a.status] || "";
     const badgeStyle = a.status === "confirmed" ? "background:rgba(15,82,87,.1);color:var(--primary);"
       : a.status === "completed" ? "background:#f0eee6;color:var(--muted);"
-      : a.status === "reagendar" ? "background:#fff3d6;color:#8a6d1f;" : "background:#f4e6e3;color:var(--danger);";
+      : a.status === "reagendar" || a.status === "pending_confirmation" ? "background:#fff3d6;color:#8a6d1f;" : "background:#f4e6e3;color:var(--danger);";
     const label = spaceLabel(a.space_id);
     // En citas cortas (ej. 15-20 min) no cabe toda la ficha sin que el texto se corte — se
     // muestra una versión de una sola línea con lo esencial (hora + servicio + cliente).
@@ -488,6 +488,9 @@ window.Agenda = (function () {
         <button class="btn btn-outline-warning btn-sm flex-fill" id="asReschedule"><i class="bi bi-arrow-repeat"></i> Reagendar</button>
         <button class="btn btn-outline-primary btn-sm flex-fill" id="asMove"><i class="bi bi-calendar2-event"></i> Mover</button>
         <button class="btn btn-outline-success btn-sm flex-fill" id="asComplete"><i class="bi bi-check2-circle"></i> Completada</button>
+      ` : a.status === "pending_confirmation" && !a.pending_move_date ? `
+        <p class="text-muted small w-100 mb-2"><i class="bi bi-hourglass-split"></i> Pendiente de que el cliente confirme por ${a.confirm_channel === "email" ? "correo" : "WhatsApp"}.</p>
+        <button class="btn btn-outline-danger btn-sm flex-fill" id="asCancel"><i class="bi bi-x-circle"></i> Cancelar</button>
       ` : a.pending_move_date ? "" : a.status === "cancelled" ? `
         <p class="text-muted small w-100 mb-2"><i class="bi bi-info-circle"></i> Esta cita está cancelada.</p>
         <button class="btn btn-outline-primary btn-sm flex-fill" id="asReopen"><i class="bi bi-arrow-counterclockwise"></i> Reabrir</button>
@@ -544,7 +547,7 @@ window.Agenda = (function () {
       map.style.backgroundSize = `${MINI_CELL}px ${MINI_CELL}px`;
       const overlaps = (o) => timeToMin(o.start) < timeToMin(a.end) && timeToMin(a.start) < timeToMin(o.end);
       map.innerHTML = spaces.map((t) => {
-        const occupiedBy = dayAppts.find((o) => o.space_id === t.id && o.id !== a.id && ["confirmed", "completed"].includes(o.status) && overlaps(o));
+        const occupiedBy = dayAppts.find((o) => o.space_id === t.id && o.id !== a.id && ["confirmed", "completed", "pending_confirmation"].includes(o.status) && overlaps(o));
         const compatible = !allowed || allowed.includes(t.type);
         const canSelect = compatible && !occupiedBy;
         const isSelected = pendingSpaceId === t.id;

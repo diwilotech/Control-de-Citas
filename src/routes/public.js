@@ -1,7 +1,7 @@
 import { all, first, run, uid } from "../lib/db.js";
 import { json, error, readJson } from "../lib/http.js";
 import { availableSlots, reminderDateTime } from "../lib/availability.js";
-import { sendApptMessage } from "../lib/messages.js";
+import { sendConfirmationRequest } from "../lib/confirm.js";
 
 // Endpoints públicos para la página de reserva del cliente (sin login).
 export function registerPublic(router) {
@@ -48,7 +48,10 @@ export function registerPublic(router) {
   router.post("/api/:slug/public/book", async (request, env, ctx) => {
     const body = await readJson(request);
     const { serviceId, specialistId, date, start, clientName, clientEmail, clientPhone } = body;
+    const channel = body.channel === "email" ? "email" : "whatsapp";
     if (!serviceId || !specialistId || !date || !start || !clientName) return error("Faltan datos de la reserva.");
+    if (channel === "whatsapp" && !clientPhone) return error("Escribe tu celular para mandarte el código por WhatsApp.");
+    if (channel === "email" && !clientEmail) return error("Escribe tu correo para mandarte el link de confirmación.");
 
     const service = await first(env, `SELECT * FROM services WHERE business_id=? AND id=?`, ctx.business.id, serviceId);
     if (!service) return error("Servicio no encontrado.", 404);
@@ -70,17 +73,20 @@ export function registerPublic(router) {
     const end = `${String(Math.floor(endMin / 60) % 24).padStart(2, "0")}:${String(endMin % 60).padStart(2, "0")}`;
     const reminder = reminderDateTime(date, start, service.reminder_hours);
     const apptId = uid();
+    // Queda pendiente de confirmar (no 'confirmed' de una) — sendConfirmationRequest manda el PIN
+    // (WhatsApp) o el link (correo) y solo pasa a 'confirmed' cuando el cliente responde/hace clic.
     await run(env,
       `INSERT INTO appointments (id, business_id, client_id, client_name, client_email, client_phone,
-        specialist_id, service_id, date, start, end, status, confirmation_date, confirmation_time)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,'confirmed',?,?)`,
+        specialist_id, service_id, date, start, end, status, confirm_channel, confirmation_date, confirmation_time)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,'pending_confirmation',?,?,?)`,
       apptId, ctx.business.id, client.id, clientName, clientEmail || null, clientPhone || null,
-      specialistId, serviceId, date, start, end, reminder.date, reminder.time);
+      specialistId, serviceId, date, start, end, channel, reminder.date, reminder.time);
 
     const appt = await first(env, `SELECT * FROM appointments WHERE id=?`, apptId);
-    if (appt.client_phone) await sendApptMessage(env, ctx.business, appt, "booked", { serviceName: service.name });
+    const origin = new URL(request.url).origin;
+    const messageResult = await sendConfirmationRequest(env, ctx.business, appt, service, origin);
 
-    return json({ appointment: appt }, { status: 201 });
+    return json({ appointment: appt, channel, messageResult }, { status: 201 });
   });
 }
 

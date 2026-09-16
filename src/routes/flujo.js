@@ -30,7 +30,7 @@ export function registerFlujo(router) {
       await Promise.all([
         revenueOn(today),
         revenueOn(yesterday),
-        first(env, `SELECT COUNT(*) AS n FROM appointments WHERE business_id=? AND date=? AND status='confirmed'`, businessId, today)
+        first(env, `SELECT COUNT(*) AS n FROM appointments WHERE business_id=? AND date=? AND status IN ('confirmed','pending_confirmation')`, businessId, today)
           .then((r) => r.n),
         first(env, `SELECT COUNT(*) AS n FROM appointments WHERE business_id=? AND status='completed' AND paid=0`, businessId),
         all(env,
@@ -54,7 +54,7 @@ export function registerFlujo(router) {
         first(env,
           `SELECT
              SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) AS completed,
-             SUM(CASE WHEN status IN ('confirmed','reagendar') THEN 1 ELSE 0 END) AS pending,
+             SUM(CASE WHEN status IN ('confirmed','reagendar','pending_confirmation') THEN 1 ELSE 0 END) AS pending,
              SUM(CASE WHEN status IN ('cancelled','no-show') THEN 1 ELSE 0 END) AS cancelledOrNoShow
            FROM appointments WHERE business_id=? AND date BETWEEN ? AND ?`,
           businessId, monthAgo, today),

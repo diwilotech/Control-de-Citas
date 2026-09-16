@@ -100,6 +100,9 @@ window.AdminShell = (function () {
     document.getElementById("setWhatsappCountryCode").value = biz.whatsapp_country_code || "57";
     document.getElementById("testWhatsappPrefix").textContent = `+${biz.whatsapp_country_code || "57"}`;
     document.getElementById("setWebhookUrl").value = `${location.origin}/api/${tenantSlug()}/webhook/evolution/${biz.webhook_token}`;
+    document.getElementById("setConfirmWindow").value = biz.confirm_window_hours || 3;
+    document.getElementById("setGmailUser").value = biz.gmail_user || "";
+    document.getElementById("setGmailAppPassword").value = biz.gmail_app_password || "";
   }
 
   document.getElementById("saveWhatsappBtn").onclick = async () => {
@@ -110,6 +113,7 @@ window.AdminShell = (function () {
       evolutionInstance: document.getElementById("setEvoInstance").value.trim(),
       evolutionApiKey: document.getElementById("setEvoApiKey").value.trim(),
       whatsappCountryCode: countryCode,
+      confirmWindowHours: Math.max(1, parseInt(document.getElementById("setConfirmWindow").value, 10) || 3),
     } });
     document.getElementById("setWhatsappCountryCode").value = countryCode;
     document.getElementById("testWhatsappPrefix").textContent = `+${countryCode}`;
@@ -128,7 +132,32 @@ window.AdminShell = (function () {
     btn.disabled = false;
   };
 
-  const TEMPLATE_LABELS = { booked: "Cita agendada", cancel: "Cancelación", reschedule: "Pedir reagendar", move: "Mover cita", reopen: "Reabrir cita", reminder: "Recordatorio" };
+  document.getElementById("saveEmailBtn").onclick = async () => {
+    await api("/staff/settings", { method: "PATCH", body: {
+      gmailUser: document.getElementById("setGmailUser").value.trim(),
+      gmailAppPassword: document.getElementById("setGmailAppPassword").value.trim(),
+    } });
+    toast("Correo guardado.");
+  };
+
+  document.getElementById("testEmailBtn").onclick = async () => {
+    const email = document.getElementById("testEmailAddress").value.trim();
+    if (!email) return toast("Escribe un correo.", false);
+    const btn = document.getElementById("testEmailBtn");
+    btn.disabled = true;
+    try {
+      await api("/staff/email/test", { method: "POST", body: { email } });
+      toast("Correo de prueba enviado — revisa esa bandeja de entrada.");
+    } catch (e) { toast(e.message, false); }
+    btn.disabled = false;
+  };
+
+  const TEMPLATE_LABELS = {
+    booked: "Cita agendada", cancel: "Cancelación", reschedule: "Pedir reagendar", move: "Mover cita",
+    reopen: "Reabrir cita", reminder: "Recordatorio",
+    confirmWhatsapp: "Pedir confirmación (WhatsApp)", confirmEmail: "Pedir confirmación (correo)",
+    confirmed: "Cita confirmada", selfCancel: "Cliente canceló (link)", selfReschedule: "Cliente pidió reagendar (link)",
+  };
 
   async function renderTemplates() {
     const templates = await api("/staff/templates").catch(() => ({}));

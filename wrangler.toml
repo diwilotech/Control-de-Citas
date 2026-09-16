@@ -1,6 +1,9 @@
 name = "cdcitas"
 main = "src/index.js"
 compatibility_date = "2025-09-01"
+# nodejs_compat: lo pide worker-mailer (envía el correo de confirmación por SMTP usando
+# el socket TCP de Workers) — ver src/lib/mailer.js.
+compatibility_flags = ["nodejs_compat"]
 
 [assets]
 directory = "./public"

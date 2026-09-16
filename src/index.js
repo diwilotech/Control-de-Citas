@@ -13,7 +13,9 @@ import { registerSettings } from "./routes/settings.js";
 import { registerWebhook } from "./routes/webhook.js";
 import { registerSchedule } from "./routes/schedule.js";
 import { registerFlujo } from "./routes/flujo.js";
+import { registerManage } from "./routes/manage.js";
 import { sendDueReminders } from "./lib/reminders.js";
+import { releaseExpiredPending } from "./lib/confirm.js";
 
 const router = new Router();
 registerSetup(router);
@@ -26,6 +28,7 @@ registerSettings(router);
 registerWebhook(router);
 registerSchedule(router);
 registerFlujo(router);
+registerManage(router);
 
 // Sirve un archivo estático concreto a través del binding de assets (para las rutas bonitas
 // /:slug, /:slug/admin y /admin, que no existen como archivo real).
@@ -56,6 +59,7 @@ export default {
 
         if (parts.length === 1) return serveAsset(env, request, "/");
         if (parts.length === 2 && parts[1] === "admin") return serveAsset(env, request, "/admin");
+        if (parts.length === 2 && parts[1] === "mis-citas") return serveAsset(env, request, "/mis-citas");
       }
 
       return env.ASSETS.fetch(request);
@@ -86,8 +90,10 @@ export default {
     }
   },
 
-  // Cron (ver wrangler.toml): manda los recordatorios de cita que ya vencieron.
+  // Cron (ver wrangler.toml): manda los recordatorios de cita que ya vencieron y libera las
+  // citas que quedaron pendientes de confirmar (PIN/link) y ya vencieron.
   async scheduled(event, env, ctx) {
     ctx.waitUntil(sendDueReminders(env));
+    ctx.waitUntil(releaseExpiredPending(env));
   },
 };

@@ -18,7 +18,7 @@ export function registerSchedule(router) {
       uid(), ctx.business.id, ctx.params.id, date);
 
     const affected = await all(env,
-      `SELECT * FROM appointments WHERE business_id=? AND specialist_id=? AND date=? AND status IN ('confirmed','reagendar')`,
+      `SELECT * FROM appointments WHERE business_id=? AND specialist_id=? AND date=? AND status IN ('confirmed','reagendar','pending_confirmation')`,
       ctx.business.id, ctx.params.id, date);
 
     for (const appt of affected) {

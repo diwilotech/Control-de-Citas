@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis citas</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="/styles.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-md" style="background:#0a3a3d;">
+  <div class="container">
+    <span class="navbar-brand d-flex align-items-center gap-2 text-white mb-0">
+      <span class="navbar-brand-mark"><i class="bi bi-calendar2-heart"></i></span>
+      <span class="fw-bold" id="bizName">Mis citas</span>
+    </span>
+  </div>
+</nav>
+
+<div class="container py-4 py-lg-5" style="max-width:640px;">
+
+  <div id="noToken" class="card-panel p-4 text-center" style="display:none;">
+    <p class="text-muted mb-0">Este link no es válido. Usa el que te mandamos por WhatsApp o correo al confirmar tu cita.</p>
+  </div>
+
+  <div id="okBanner" class="card-panel p-3 mb-3 text-center" style="display:none;background:#e6f4ec;border-color:#3a9a6d;">
+    <i class="bi bi-check-circle-fill" style="color:#1e6b45;"></i> <strong>¡Tu cita quedó confirmada!</strong>
+  </div>
+  <div id="errBanner" class="card-panel p-3 mb-3 text-center" style="display:none;background:#f4e6e3;border-color:#c0472f;color:#8a3a26;"></div>
+
+  <div id="listWrap" style="display:none;">
+    <h1 class="h4 fw-bold display-font mb-3">Hola, <span id="clientName"></span></h1>
+    <div id="apptList" class="d-flex flex-column gap-3"></div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+const { api, toast } = window.CDC;
+
+const STATUS_LABELS = { confirmed: "Confirmada", pending_confirmation: "Pendiente de confirmar", completed: "Completada", cancelled: "Cancelada", "no-show": "Inasistencia", reagendar: "Por reagendar" };
+const STATUS_COLORS = { confirmed: "#0f5257", pending_confirmation: "#8a6d1f", completed: "#6b7570", cancelled: "#c0472f", "no-show": "#c0472f", reagendar: "#8a5a1f" };
+
+function token() { return new URLSearchParams(location.search).get("t"); }
+
+function formatDateHuman(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  return `${String(d).padStart(2, "0")} ${meses[m - 1]} ${y}`;
+}
+function formatAmPm(hhmm) {
+  const [h, m] = hhmm.split(":").map(Number);
+  const suffix = h < 12 ? "AM" : "PM";
+  let h12 = h % 12; if (h12 === 0) h12 = 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+
+function canAct(appt) {
+  if (!["confirmed", "pending_confirmation", "reagendar"].includes(appt.status)) return false;
+  const startMs = new Date(`${appt.date}T${appt.start}:00`).getTime();
+  return startMs - Date.now() >= (appt.cancel_window_hours || 0) * 3600000;
+}
+
+function apptCard(appt) {
+  const actionable = canAct(appt);
+  const canReschedule = actionable && appt.status !== "reagendar";
+  return `
+    <div class="card-panel p-3" data-id="${appt.id}">
+      <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+        <div>
+          <div class="fw-bold">${appt.service_name}</div>
+          <div class="text-muted small">${formatDateHuman(appt.date)} · ${formatAmPm(appt.start)} con ${appt.specialist_name}</div>
+        </div>
+        <span class="badge rounded-pill" style="background:${STATUS_COLORS[appt.status]}22;color:${STATUS_COLORS[appt.status]};">${STATUS_LABELS[appt.status] || appt.status}</span>
+      </div>
+      ${actionable ? `
+        <div class="d-flex gap-2 mt-2">
+          ${canReschedule ? `<button class="btn btn-sm btn-outline-dark" data-action="reschedule">Pedir reagendar</button>` : ""}
+          <button class="btn btn-sm btn-outline-danger" data-action="cancel">Cancelar</button>
+        </div>` : ""}
+    </div>`;
+}
+
+async function act(apptId, action, confirmMsg) {
+  if (confirmMsg && !confirm(confirmMsg)) return;
+  try {
+    await api(`/public/my-appointments/${token()}/${apptId}/${action}`, { method: "POST" });
+    toast(action === "cancel" ? "Cita cancelada." : "Listo, pediste reagendar. Te contactaremos.");
+    load();
+  } catch (e) { toast(e.message, false); }
+}
+
+async function load() {
+  try {
+    const data = await api(`/public/my-appointments/${token()}`);
+    document.getElementById("bizName").textContent = data.business.name;
+    document.getElementById("clientName").textContent = data.client.name;
+    document.getElementById("listWrap").style.display = "block";
+    const wrap = document.getElementById("apptList");
+    if (!data.appointments.length) {
+      wrap.innerHTML = `<p class="text-muted">Todavía no tienes citas.</p>`;
+      return;
+    }
+    wrap.innerHTML = data.appointments.map(apptCard).join("");
+    wrap.querySelectorAll("[data-action]").forEach((btn) => {
+      const id = btn.closest("[data-id]").dataset.id;
+      const action = btn.dataset.action;
+      btn.onclick = () => act(id, action, action === "cancel" ? "¿Seguro que quieres cancelar esta cita?" : null);
+    });
+  } catch (e) {
+    document.getElementById("noToken").style.display = "block";
+  }
+}
+
+function init() {
+  if (!token()) { document.getElementById("noToken").style.display = "block"; return; }
+  const params = new URLSearchParams(location.search);
+  if (params.get("justConfirmed")) document.getElementById("okBanner").style.display = "block";
+  if (params.get("err")) {
+    const msgs = { confirm: "Ese link de confirmación ya no es válido.", expired: "Ese link de confirmación ya venció." };
+    const el = document.getElementById("errBanner");
+    el.textContent = msgs[params.get("err")] || "Hubo un problema con el link.";
+    el.style.display = "block";
+  }
+  load();
+}
+init();
+</script>
+</body>
+</html>

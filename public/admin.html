@@ -234,6 +234,8 @@
           <button class="btn btn-outline-dark" id="copyWebhookBtn" type="button">Copiar</button>
         </div>
         <button class="btn btn-outline-dark btn-sm mb-3" id="rotateWebhookBtn" type="button">Generar un link nuevo</button>
+        <label class="label-xs d-block mb-1">Horas para confirmar una reserva antes de liberar el horario (aplica a WhatsApp y correo)</label>
+        <input type="number" min="1" class="form-control mb-3" id="setConfirmWindow" style="max-width:120px;">
         <div><button class="btn btn-brand btn-sm" id="saveWhatsappBtn">Guardar</button></div>
       </div>
 
@@ -249,9 +251,28 @@
       </div>
 
       <div class="card-panel p-4 mt-3">
+        <h2 class="h6 fw-bold display-font mb-3">Correo (Gmail)</h2>
+        <p class="text-muted small mb-3">Para mandar la confirmación por correo a los clientes que prefieran esa opción. Necesitas una
+          <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">contraseña de aplicación</a> de tu cuenta de Gmail — no la contraseña normal.</p>
+        <label class="label-xs d-block mb-1">Tu Gmail</label>
+        <input type="email" class="form-control mb-2" id="setGmailUser" placeholder="tunegocio@gmail.com">
+        <label class="label-xs d-block mb-1">Contraseña de aplicación</label>
+        <input type="password" class="form-control mb-3" id="setGmailAppPassword">
+        <div><button class="btn btn-brand btn-sm" id="saveEmailBtn">Guardar</button></div>
+      </div>
+
+      <div class="card-panel p-4 mt-3">
+        <h2 class="h6 fw-bold display-font mb-3">Probar correo</h2>
+        <p class="text-muted small mb-3">Manda un correo de prueba para confirmar que el Gmail está bien conectado.</p>
+        <label class="label-xs d-block mb-1">Correo</label>
+        <input type="email" class="form-control mb-2" id="testEmailAddress" style="max-width:320px;">
+        <button class="btn btn-brand btn-sm" id="testEmailBtn">Enviar correo de prueba</button>
+      </div>
+
+      <div class="card-panel p-4 mt-3">
         <h2 class="h6 fw-bold display-font mb-1"><i class="bi bi-chat-left-text"></i> Plantillas de Mensajes</h2>
         <p class="text-muted small mb-3">
-          Placeholders: <code>{cliente}</code> <code>{servicio}</code> <code>{fecha}</code> <code>{hora}</code> <code>{fechaNueva}</code> <code>{horaNueva}</code>
+          Placeholders: <code>{cliente}</code> <code>{servicio}</code> <code>{fecha}</code> <code>{hora}</code> <code>{fechaNueva}</code> <code>{horaNueva}</code> <code>{codigo}</code> <code>{link}</code> <code>{ventana}</code>
         </p>
         <div id="templatesForm" class="row g-3"></div>
       </div>

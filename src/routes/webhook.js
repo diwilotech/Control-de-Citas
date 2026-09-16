@@ -1,4 +1,5 @@
 import { json, error, readJson } from "../lib/http.js";
+import { handleIncomingWhatsapp } from "../lib/confirm.js";
 
 // Evolution API llama a esta URL cuando pasa algo en la instancia de WhatsApp del negocio
 // (mensaje entrante, cambio de conexión, etc.). El token en la propia URL hace de secreto
@@ -9,7 +10,10 @@ export function registerWebhook(router) {
     if (!ctx.business.webhook_token || ctx.params.token !== ctx.business.webhook_token) {
       return error("Token inválido.", 404);
     }
-    await readJson(request);
+    const body = await readJson(request).catch(() => null);
+    // Si el payload no trae un mensaje entrante que confirme una cita, handleIncomingWhatsapp no
+    // hace nada — nunca debe tirar error (Evolution reintenta el webhook si no le llega un 200).
+    try { await handleIncomingWhatsapp(env, ctx.business, body, new URL(request.url).origin); } catch {}
     return json({ ok: true });
   });
 }

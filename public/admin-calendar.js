@@ -220,7 +220,7 @@ window.MonthCalendar = (function () {
       return;
     }
 
-    const affected = apptsCache.filter((a) => a.specialist_id === specialistId && a.date === iso && ["confirmed", "reagendar"].includes(a.status));
+    const affected = apptsCache.filter((a) => a.specialist_id === specialistId && a.date === iso && ["confirmed", "reagendar", "pending_confirmation"].includes(a.status));
     if (!affected.length) {
       await applyDayOff(specialistId, iso, false);
       return;

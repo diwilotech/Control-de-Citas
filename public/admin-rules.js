@@ -3,18 +3,51 @@
 // specialist_services ya existían en el backend — esto solo les pone interfaz.
 window.Rules = (function () {
   const { api, toast } = window.CDC;
-  const TYPE_LABELS = { general: "General", barra: "Barra", privado: "Privado / VIP", terraza: "Terraza" };
   const TEMPLATE_LABELS = { booked: "Cita agendada", cancel: "Cancelación", reschedule: "Pedir reagendar", move: "Mover cita", reopen: "Reabrir cita", reminder: "Recordatorio" };
 
-  let servicesCache = [], specialistsCache = [];
+  let servicesCache = [], specialistsCache = [], spaceTypesCache = [];
   let editServiceModal = null, editSpecialistModal = null;
   let editingServiceId = null, editingSpecialistId = null;
 
+  function typeLabel(key) { return spaceTypesCache.find((t) => t.key === key)?.label || key; }
+
   async function render() {
     await renderTemplates();
+    await renderSpaceTypes();
     await renderServices();
     await renderSpecialists();
   }
+
+  /* ---------- Tipos de espacio ---------- */
+  function slugify(label) {
+    return label.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "tipo";
+  }
+
+  async function renderSpaceTypes() {
+    spaceTypesCache = await api("/staff/space-types").catch(() => []);
+    document.getElementById("spaceTypesList").innerHTML = spaceTypesCache.length ? spaceTypesCache.map((t) => `
+      <span class="badge rounded-pill d-inline-flex align-items-center gap-2" style="background:#f0eee6;color:var(--ink);font-size:.82rem;padding:.4rem .7rem;">
+        ${t.label}
+        <button type="button" class="btn-close" style="font-size:.55rem;" data-del-type="${t.id}" aria-label="Eliminar"></button>
+      </span>`).join("") : `<p class="text-muted small mb-0">Sin tipos todavía — añade el primero abajo.</p>`;
+    document.querySelectorAll("[data-del-type]").forEach((el) => (el.onclick = async () => {
+      if (!confirm("¿Eliminar este tipo de espacio? Los espacios/servicios que ya lo usan quedan con una referencia suelta.")) return;
+      await api(`/staff/space-types/${el.dataset.delType}`, { method: "DELETE" });
+      renderSpaceTypes();
+    }));
+  }
+
+  document.getElementById("addSpaceTypeBtn").onclick = async () => {
+    const input = document.getElementById("newSpaceTypeLabel");
+    const label = input.value.trim();
+    if (!label) return toast("Escribe un nombre.", false);
+    try {
+      await api("/staff/space-types", { method: "POST", body: { key: slugify(label), label } });
+      input.value = "";
+      renderSpaceTypes();
+    } catch (e) { toast(e.message, false); }
+  };
 
   /* ---------- Plantillas ---------- */
   async function renderTemplates() {
@@ -45,7 +78,7 @@ window.Rules = (function () {
           </div>
           <div class="text-muted small mt-1">${s.duration_min} min · Cancela ${s.cancel_window_hours}h antes · Recordatorio ${s.reminder_hours}h antes</div>
           <div class="d-flex flex-wrap gap-1 mt-2">
-            ${allowed.length ? allowed.map((k) => `<span class="badge rounded-pill" style="background:#f0eee6;color:var(--ink);font-size:.68rem;">${TYPE_LABELS[k] || k}</span>`).join("")
+            ${allowed.length ? allowed.map((k) => `<span class="badge rounded-pill" style="background:#f0eee6;color:var(--ink);font-size:.68rem;">${typeLabel(k)}</span>`).join("")
               : `<span class="text-muted small" style="font-size:.72rem;">Admite cualquier espacio</span>`}
           </div>
         </div>
@@ -56,7 +89,8 @@ window.Rules = (function () {
   }
 
   function serviceTypeCheckboxes(selected) {
-    return Object.entries(TYPE_LABELS).map(([key, label]) => `
+    if (!spaceTypesCache.length) return `<p class="text-muted small mb-0">Todavía no hay tipos de espacio — créalos arriba, en "Tipos de espacio".</p>`;
+    return spaceTypesCache.map(({ key, label }) => `
       <div class="form-check"><input class="form-check-input" type="checkbox" value="${key}" id="svcType_${key}" ${selected.includes(key) ? "checked" : ""}>
       <label class="form-check-label small" for="svcType_${key}">${label}</label></div>`).join("");
   }

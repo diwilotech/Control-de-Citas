@@ -4,7 +4,6 @@
 window.FloorPlan = (function () {
   const { api, toast, formatAMPM, todayISO, layoutOverlaps } = window.CDC;
   const CELL = 80;
-  const TYPE_LABELS = { general: "General", barra: "Barra", privado: "Privado / VIP", terraza: "Terraza" };
   const SHAPES = {
     square: { label: "Cuadrada", w: 3, h: 3, capacity: 2, shape: "square" },
     rectH: { label: "Rectangular horizontal", w: 5, h: 3, capacity: 6, shape: "rect-h" },
@@ -13,14 +12,20 @@ window.FloorPlan = (function () {
   const STATUSES = ["libre", "ocupada", "reservada"];
 
   let spacesCache = [];
+  let spaceTypesCache = [];
   let todayApptsCache = [];
   let editMode = false;
   let dragCtx = null, resizeCtx = null;
   let editingId = null;
   let editSpaceModal = null, scheduleModal = null;
 
+  function typeLabel(key) { return spaceTypesCache.find((t) => t.key === key)?.label || key; }
+
   async function render() {
-    spacesCache = await api("/staff/spaces").catch(() => []);
+    [spacesCache, spaceTypesCache] = await Promise.all([
+      api("/staff/spaces").catch(() => []),
+      api("/staff/space-types").catch(() => []),
+    ]);
     renderToolbar();
     renderModeUI();
     renderTables();
@@ -88,6 +93,7 @@ window.FloorPlan = (function () {
     if (!t) return;
     editingId = id;
     document.getElementById("editSpaceName").value = t.label;
+    document.getElementById("editSpaceType").innerHTML = spaceTypesCache.map((st) => `<option value="${st.key}">${st.label}</option>`).join("");
     document.getElementById("editSpaceType").value = t.type;
     editSpaceModal = editSpaceModal || new bootstrap.Modal(document.getElementById("editSpaceModal"));
     editSpaceModal.show();
@@ -141,7 +147,7 @@ window.FloorPlan = (function () {
         <button class="t-status-dot" title="Cambiar estado" data-status-id="${t.id}"></button>
         ${editMode ? `<button class="t-remove" title="Eliminar" data-remove-id="${t.id}">✕</button>` : ""}
         <span class="t-label">${t.label} ${editMode ? `<i class="bi bi-pencil-fill" role="button" data-edit-id="${t.id}"></i>` : ""}</span>
-        <span class="t-cap"><i class="bi bi-people-fill"></i> ${t.capacity} · <span class="t-type-badge">${TYPE_LABELS[t.type] || "General"}</span></span>
+        <span class="t-cap"><i class="bi bi-people-fill"></i> ${t.capacity} · <span class="t-type-badge">${typeLabel(t.type)}</span></span>
         ${miniScheduleHTML(t)}
         ${editMode ? `<div class="t-resize" data-resize-id="${t.id}"></div>` : ""}
       </div>`).join("");

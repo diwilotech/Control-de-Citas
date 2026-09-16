@@ -7,6 +7,7 @@ const specialists = makeResource("specialists", ["name", "role", "avatar", "colo
 const spaces = makeResource("spaces", ["label", "type", "shape", "capacity", "x", "y", "w", "h", "status"]);
 const clients = makeResource("clients", ["name", "email", "phone"]);
 const blocks = makeResource("blocks", ["specialist_id", "date", "start", "end", "reason"]);
+const spaceTypes = makeResource("space_types", ["key", "label"]);
 
 export function registerResources(router) {
   registerCrud(router, "services", services, "name");
@@ -14,6 +15,7 @@ export function registerResources(router) {
   registerCrud(router, "spaces", spaces, "rowid");
   registerCrud(router, "clients", clients, "name");
   registerCrud(router, "blocks", blocks, "date");
+  registerCrud(router, "space-types", spaceTypes, "label");
 
   // Servicios que ofrece un especialista (tabla puente specialist_services).
   router.put("/api/:slug/staff/specialists/:id/services", async (request, env, ctx) => {

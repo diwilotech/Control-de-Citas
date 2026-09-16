@@ -9,6 +9,14 @@ import { DEFAULT_TEMPLATES } from "../lib/templates.js";
 // sistema y no se pueden usar como slug (ver el ruteo de /:slug en src/index.js).
 const RESERVED_SLUGS = new Set(["admin", "api", "setup", "app", "styles", "t"]);
 
+// Tipos de espacio con los que arranca todo negocio nuevo (después son editables en Reglas).
+const DEFAULT_SPACE_TYPES = [
+  { key: "general", label: "General" },
+  { key: "barra", label: "Barra" },
+  { key: "privado", label: "Privado / VIP" },
+  { key: "terraza", label: "Terraza" },
+];
+
 // Crea un negocio nuevo (tenant) con su primer usuario dueño. Solo el super admin de la
 // plataforma puede hacerlo (ver routes/platform.js).
 export function registerSetup(router) {
@@ -42,6 +50,11 @@ export function registerSetup(router) {
     for (const [key, tplBody] of Object.entries(DEFAULT_TEMPLATES)) {
       await run(env, `INSERT INTO message_templates (id, business_id, key, body) VALUES (?,?,?,?)`,
         uid(), businessId, key, tplBody);
+    }
+
+    for (const t of DEFAULT_SPACE_TYPES) {
+      await run(env, `INSERT INTO space_types (id, business_id, key, label) VALUES (?,?,?,?)`,
+        uid(), businessId, t.key, t.label);
     }
 
     await run(env,

@@ -3,7 +3,28 @@
 // más allá de lo necesario para el arrastre en curso.
 window.FloorPlan = (function () {
   const { api, toast, formatAMPM, todayISO, layoutOverlaps } = window.CDC;
-  const CELL = 80;
+  // El tamaño de celda se achica en pantallas angostas para que el plano quepa sin obligar a
+  // hacer scroll horizontal en el celular — antes era un canvas fijo de 1600x720px en todos lados.
+  let CELL = 80;
+  function updateCellSize() {
+    CELL = window.innerWidth < 480 ? 44 : window.innerWidth < 768 ? 56 : window.innerWidth < 1200 ? 68 : 80;
+  }
+  function canvasCols() {
+    const grid = document.getElementById("floorGrid");
+    const viewCols = Math.max(6, Math.floor(((grid && grid.parentElement && grid.parentElement.clientWidth) || 320) / CELL));
+    const maxX = spacesCache.length ? Math.max(...spacesCache.map((t) => t.x + t.w)) : 0;
+    return Math.max(viewCols, maxX + 2);
+  }
+  function canvasRows() {
+    const maxY = spacesCache.length ? Math.max(...spacesCache.map((t) => t.y + t.h)) : 0;
+    return Math.max(8, maxY + 2);
+  }
+  function sizeCanvas() {
+    const grid = document.getElementById("floorGrid");
+    grid.style.width = `${canvasCols() * CELL}px`;
+    grid.style.height = `${canvasRows() * CELL}px`;
+    grid.style.backgroundSize = `${CELL}px ${CELL}px`;
+  }
   const SHAPES = {
     square: { label: "Cuadrada", w: 3, h: 3, capacity: 2, shape: "square" },
     rectH: { label: "Rectangular horizontal", w: 5, h: 3, capacity: 6, shape: "rect-h" },
@@ -26,10 +47,18 @@ window.FloorPlan = (function () {
       api("/staff/spaces").catch(() => []),
       api("/staff/space-types").catch(() => []),
     ]);
+    updateCellSize();
     renderToolbar();
     renderModeUI();
     renderTables();
   }
+
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    if (document.getElementById("view-espacio").style.display === "none") return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { updateCellSize(); renderTables(); }, 150);
+  });
 
   function toggleEdit() { editMode = !editMode; render(); }
   document.getElementById("spaceEditToggle").onclick = toggleEdit;
@@ -58,8 +87,7 @@ window.FloorPlan = (function () {
   }
 
   function findFreeSpot(w, h) {
-    const grid = document.getElementById("floorGrid");
-    const cols = Math.max(10, Math.floor(grid.clientWidth / CELL));
+    const cols = canvasCols();
     for (let y = 0; y < 40; y++) {
       for (let x = 0; x <= cols - w; x++) {
         const overlaps = spacesCache.some((t) => x < t.x + t.w && x + w > t.x && y < t.y + t.h && y + h > t.y);
@@ -141,6 +169,7 @@ window.FloorPlan = (function () {
   async function renderTables() {
     todayApptsCache = await api(`/staff/appointments?date=${todayISO()}`).catch(() => []);
     const grid = document.getElementById("floorGrid");
+    sizeCanvas();
     grid.innerHTML = spacesCache.map((t) => `
       <div class="table-item ${editMode ? "" : "locked"} shape-${t.shape} status-${t.status}" data-id="${t.id}"
         style="left:${t.x * CELL}px; top:${t.y * CELL}px; width:${t.w * CELL}px; height:${t.h * CELL}px;">

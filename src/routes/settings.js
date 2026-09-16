@@ -10,7 +10,7 @@ export function registerSettings(router) {
     const b = await readJson(request);
     const fields = { name: b.name, open_hour: b.openHour, close_hour: b.closeHour,
       open_days: b.openDays ? JSON.stringify(b.openDays) : undefined,
-      evolution_instance: b.evolutionInstance, evolution_api_key: b.evolutionApiKey,
+      evolution_url: b.evolutionUrl, evolution_instance: b.evolutionInstance, evolution_api_key: b.evolutionApiKey,
       whatsapp_country_code: b.whatsappCountryCode,
       whatsapp_enabled: b.whatsappEnabled === undefined ? undefined : (b.whatsappEnabled ? 1 : 0) };
     const present = Object.entries(fields).filter(([, v]) => v !== undefined);

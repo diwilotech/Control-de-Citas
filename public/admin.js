@@ -84,6 +84,7 @@ window.AdminShell = (function () {
     const biz = await api("/staff/settings").catch(() => null);
     if (!biz) return;
     document.getElementById("setWhatsappEnabled").checked = !!biz.whatsapp_enabled;
+    document.getElementById("setEvoUrl").value = biz.evolution_url || "";
     document.getElementById("setEvoInstance").value = biz.evolution_instance || "";
     document.getElementById("setEvoApiKey").value = biz.evolution_api_key || "";
     document.getElementById("setWhatsappCountryCode").value = biz.whatsapp_country_code || "57";
@@ -95,6 +96,7 @@ window.AdminShell = (function () {
     const countryCode = document.getElementById("setWhatsappCountryCode").value.trim().replace(/\D/g, "") || "57";
     await api("/staff/settings", { method: "PATCH", body: {
       whatsappEnabled: document.getElementById("setWhatsappEnabled").checked,
+      evolutionUrl: document.getElementById("setEvoUrl").value.trim(),
       evolutionInstance: document.getElementById("setEvoInstance").value.trim(),
       evolutionApiKey: document.getElementById("setEvoApiKey").value.trim(),
       whatsappCountryCode: countryCode,

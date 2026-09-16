@@ -18,11 +18,12 @@ export async function sendWhatsApp(env, business, phone, text) {
   if (!business.whatsapp_enabled) {
     return { ok: false, skipped: true, error: "WhatsApp está desactivado para este negocio." };
   }
-  const baseUrl = env.EVOLUTION_API_URL;
+  const baseUrl = business.evolution_url || env.EVOLUTION_API_URL;
   const instance = business.evolution_instance || env.EVOLUTION_DEFAULT_INSTANCE;
   const apiKey = business.evolution_api_key || env.EVOLUTION_API_KEY;
   if (!baseUrl || !instance || !apiKey) {
-    return { ok: false, error: "Evolution API no está configurada (faltan EVOLUTION_API_URL / instancia / api key)." };
+    const missing = [!baseUrl && "URL", !instance && "instancia", !apiKey && "API key"].filter(Boolean).join(", ");
+    return { ok: false, error: `Evolution API no está configurada (falta: ${missing}).` };
   }
   const cleanPhone = normalizePhone(phone, business.whatsapp_country_code);
   try {

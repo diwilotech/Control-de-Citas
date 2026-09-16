@@ -106,15 +106,26 @@
   }
 
   // Horario efectivo de un día para el negocio o un especialista puntual — espejo en el cliente
-  // de effectiveHours() en src/lib/availability.js (misma prioridad: excepción del especialista >
-  // excepción del negocio > horario general), para pintar la agenda/calendario sin ir al server.
-  function effectiveHours(business, exceptions, date, specialistId) {
+  // de effectiveHours() en src/lib/availability.js. Prioridad: excepción puntual (especialista o
+  // negocio) > patrón semanal propio del especialista (work_days/open_hour/close_hour) > horario
+  // general del negocio. `specialist` es opcional (fila de specialists, no solo el id).
+  function effectiveHours(business, exceptions, date, specialistId, specialist) {
     const specialistEx = specialistId ? exceptions.find((e) => e.specialist_id === specialistId && e.date === date) : null;
     const businessEx = exceptions.find((e) => !e.specialist_id && e.date === date);
     const ex = specialistEx || businessEx;
     if (ex) return ex.closed ? null : { open: ex.open_hour, close: ex.close_hour };
-    const openDays = JSON.parse(business.open_days || "[1,2,3,4,5,6]");
+
     const dow = new Date(date + "T00:00:00").getDay();
+
+    if (specialist) {
+      const workDays = JSON.parse(specialist.work_days || "[1,2,3,4,5,6]");
+      if (!workDays.includes(dow)) return null;
+      if (specialist.open_hour != null && specialist.close_hour != null) {
+        return { open: specialist.open_hour, close: specialist.close_hour };
+      }
+    }
+
+    const openDays = JSON.parse(business.open_days || "[1,2,3,4,5,6]");
     if (!openDays.includes(dow)) return null;
     return { open: business.open_hour, close: business.close_hour };
   }

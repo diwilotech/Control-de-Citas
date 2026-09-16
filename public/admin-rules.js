@@ -4,6 +4,7 @@
 // existían en el backend — esto solo les pone interfaz.
 window.Rules = (function () {
   const { api, toast } = window.CDC;
+  const DOW_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
   let servicesCache = [], specialistsCache = [], spaceTypesCache = [];
   let editServiceModal = null, editSpecialistModal = null;
@@ -168,6 +169,15 @@ window.Rules = (function () {
       <label class="form-check-label small" for="spSvc_${s.id}">${s.name}</label></div>`).join("");
   }
 
+  function renderDayChips(selectedDows) {
+    document.getElementById("editSpecialistDays").innerHTML = DOW_SHORT.map((label, dow) =>
+      `<span class="chip ${selectedDows.includes(dow) ? "active" : ""}" data-dow="${dow}">${label}</span>`).join("");
+    document.querySelectorAll("#editSpecialistDays .chip").forEach((el) => (el.onclick = () => el.classList.toggle("active")));
+  }
+  function selectedDayChips() {
+    return Array.from(document.querySelectorAll("#editSpecialistDays .chip.active")).map((el) => Number(el.dataset.dow));
+  }
+
   async function openEditSpecialist(id) {
     const sp = specialistsCache.find((sp) => sp.id === id);
     if (!sp) return;
@@ -178,6 +188,10 @@ window.Rules = (function () {
     document.getElementById("editSpecialistRole").value = sp.role || "";
     document.getElementById("editSpecialistAvatar").value = sp.avatar;
     document.getElementById("editSpecialistColor").value = sp.color;
+    let workDays = [1, 2, 3, 4, 5, 6]; try { workDays = JSON.parse(sp.work_days || "[1,2,3,4,5,6]"); } catch { /* usa el default */ }
+    renderDayChips(workDays);
+    document.getElementById("editSpecialistOpenHour").value = sp.open_hour ?? "";
+    document.getElementById("editSpecialistCloseHour").value = sp.close_hour ?? "";
     const selected = await api(`/staff/specialists/${id}/services`).catch(() => []);
     document.getElementById("editSpecialistServices").innerHTML = specialistServiceCheckboxes(selected);
     editSpecialistModal = editSpecialistModal || new bootstrap.Modal(document.getElementById("editSpecialistModal"));
@@ -192,6 +206,9 @@ window.Rules = (function () {
     document.getElementById("editSpecialistRole").value = "";
     document.getElementById("editSpecialistAvatar").value = "";
     document.getElementById("editSpecialistColor").value = "#0f5257";
+    renderDayChips([1, 2, 3, 4, 5, 6]);
+    document.getElementById("editSpecialistOpenHour").value = "";
+    document.getElementById("editSpecialistCloseHour").value = "";
     document.getElementById("editSpecialistServices").innerHTML = specialistServiceCheckboxes([]);
     editSpecialistModal = editSpecialistModal || new bootstrap.Modal(document.getElementById("editSpecialistModal"));
     editSpecialistModal.show();
@@ -204,13 +221,22 @@ window.Rules = (function () {
     const avatar = (document.getElementById("editSpecialistAvatar").value.trim() || name.slice(0, 2)).slice(0, 2).toUpperCase();
     const color = document.getElementById("editSpecialistColor").value;
     const serviceIds = Array.from(document.querySelectorAll("#editSpecialistServices input:checked")).map((el) => el.value);
+    const workDays = selectedDayChips();
+    if (!workDays.length) return toast("Marca al menos un día que trabaje.", false);
+    const openHourRaw = document.getElementById("editSpecialistOpenHour").value.trim();
+    const closeHourRaw = document.getElementById("editSpecialistCloseHour").value.trim();
+    const open_hour = openHourRaw === "" ? null : Number(openHourRaw);
+    const close_hour = closeHourRaw === "" ? null : Number(closeHourRaw);
+    if ((open_hour === null) !== (close_hour === null)) return toast("Pon apertura y cierre, o deja los dos vacíos.", false);
+    if (open_hour !== null && !(close_hour > open_hour)) return toast("La hora de cierre debe ser después de la apertura.", false);
 
     let id = editingSpecialistId;
+    const body = { name, role, avatar, color, work_days: workDays, open_hour, close_hour };
     if (id === null) {
-      const created = await api("/staff/specialists", { method: "POST", body: { name, role, avatar, color } });
+      const created = await api("/staff/specialists", { method: "POST", body });
       id = created.id;
     } else {
-      await api(`/staff/specialists/${id}`, { method: "PATCH", body: { name, role, avatar, color } });
+      await api(`/staff/specialists/${id}`, { method: "PATCH", body });
     }
     await api(`/staff/specialists/${id}/services`, { method: "PUT", body: { serviceIds } });
     editSpecialistModal.hide();

@@ -13,7 +13,12 @@ export function reminderDateTime(date, start, reminderHours) {
   return { date: `${y}-${m}-${d}`, time: `${hh}:${mm}` };
 }
 
-// Horario efectivo de un día para el negocio o para un especialista puntual (respeta excepciones).
+// Horario efectivo de un día para el negocio o para un especialista puntual. Prioridad:
+// 1) excepción puntual del especialista o del negocio para esa fecha exacta (festivo, día suelto
+//    con horario especial — lo que se configura en Calendario)
+// 2) patrón semanal propio del especialista (work_days + open_hour/close_hour — lo que se
+//    configura en Reglas → Especialistas; se aplica automático todas las semanas)
+// 3) horario general del negocio
 async function effectiveHours(env, business, date, specialistId) {
   const specialistEx = specialistId
     ? await first(env, `SELECT * FROM date_exceptions WHERE business_id=? AND specialist_id=? AND date=?`,
@@ -24,8 +29,18 @@ async function effectiveHours(env, business, date, specialistId) {
   const ex = specialistEx || businessEx;
   if (ex) return ex.closed ? null : { open: ex.open_hour, close: ex.close_hour };
 
-  const openDays = JSON.parse(business.open_days || "[1,2,3,4,5,6]");
   const dow = new Date(date + "T00:00:00").getDay();
+
+  if (specialistId) {
+    const sp = await first(env, `SELECT work_days, open_hour, close_hour FROM specialists WHERE id=?`, specialistId);
+    if (sp) {
+      const workDays = JSON.parse(sp.work_days || "[1,2,3,4,5,6]");
+      if (!workDays.includes(dow)) return null;
+      if (sp.open_hour != null && sp.close_hour != null) return { open: sp.open_hour, close: sp.close_hour };
+    }
+  }
+
+  const openDays = JSON.parse(business.open_days || "[1,2,3,4,5,6]");
   if (!openDays.includes(dow)) return null;
   return { open: business.open_hour, close: business.close_hour };
 }

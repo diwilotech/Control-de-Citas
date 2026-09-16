@@ -171,7 +171,7 @@ window.Agenda = (function () {
 
     const isToday = dateISO === todayISO();
     const tracks = cols.map((sp) => {
-      const hours = effectiveHours(businessCache, exceptionsCache, dateISO, sp.id);
+      const hours = effectiveHours(businessCache, exceptionsCache, dateISO, sp.id, sp);
       const appts = filtered.filter((a) => a.specialist_id === sp.id);
       const spBlocks = blocks.filter((b) => b.specialist_id === sp.id && b.date === dateISO);
       return `<div class="agenda-day-track" style="height:${totalHeight()}px; --agenda-rowpx:${ROWPX}px;">

@@ -26,16 +26,25 @@ window.MonthCalendar = (function () {
     return { closed: false, open: businessCache.open_hour, close: businessCache.close_hour };
   }
 
-  function isWorking(specialistId, iso) {
-    return !exceptionsCache.some((e) => e.specialist_id === specialistId && e.date === iso && e.closed);
-  }
-
-  // Horario efectivo de UN especialista ese día: su propia excepción si tiene (puede ser un
-  // horario parcial, ej. solo medio día), si no el horario general del negocio ese día.
+  // Horario efectivo de UN especialista ese día. Prioridad: su excepción puntual para esa fecha
+  // (puede ser horario parcial, ej. solo medio día) > su patrón semanal propio (work_days +
+  // open_hour/close_hour, configurado en Reglas — se aplica automático todas las semanas) >
+  // horario general del negocio ese día.
   function specialistHours(specialistId, iso, dow) {
     const ex = exceptionsCache.find((e) => e.specialist_id === specialistId && e.date === iso);
     if (ex) return ex.closed ? { closed: true } : { closed: false, open: ex.open_hour, close: ex.close_hour };
+    const sp = specialistsCache.find((s) => s.id === specialistId);
+    if (sp) {
+      const workDays = JSON.parse(sp.work_days || "[1,2,3,4,5,6]");
+      if (!workDays.includes(dow)) return { closed: true };
+      if (sp.open_hour != null && sp.close_hour != null) return { closed: false, open: sp.open_hour, close: sp.close_hour };
+    }
     return dayHours(iso, dow);
+  }
+
+  function isWorking(specialistId, iso) {
+    const dow = new Date(iso + "T00:00:00").getDay();
+    return !specialistHours(specialistId, iso, dow).closed;
   }
 
   async function render() {

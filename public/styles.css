@@ -2,6 +2,7 @@
   --ink:#12211f; --paper:#f6f4ee; --line:#e7e3d8;
   --primary:#0f5257; --primary-dark:#0a3a3d;
   --accent:#d97a3f; --amber:#e0a339; --muted:#6b7570; --danger:#c0472f;
+  --header-h:56px;
 }
 body{ background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; }
 h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; letter-spacing:-.01em; }
@@ -10,7 +11,7 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 .btn-brand{ background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600; }
 .btn-brand:hover{ background:var(--primary-dark); border-color:var(--primary-dark); color:#fff; }
 .avatar-badge{ width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:.8rem; flex-shrink:0; }
-.topbar{ background:#fff; border-bottom:1px solid var(--line); }
+.topbar{ background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:20; }
 .slot-btn{ border:1px solid var(--line); border-radius:10px; padding:.5rem .3rem; background:#fff; font-weight:600; font-size:.85rem; }
 .slot-btn.available{ background:#e6f4ec; border-color:#3a9a6d; color:#1e6b45; }
 .slot-btn.unavailable{ background:#3a3d3a; border-color:#3a3d3a; color:#9a9d9a; cursor:not-allowed; opacity:.85; }
@@ -87,7 +88,7 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 /* Los filtros quedan fijos arriba de la pestaña Agenda; solo la grilla (abajo) hace scroll,
    tanto horizontal (columnas de especialistas) como vertical (horas) — así mover la agenda no
    empuja los filtros fuera de vista ni hace scrollear la página entera. */
-.tab-sticky-header{ position:sticky; top:0; z-index:15; background:var(--paper); padding-top:.25rem; }
+.tab-sticky-header{ position:sticky; top:var(--header-h); z-index:15; background:var(--paper); padding-top:.25rem; }
 .agenda-scroll{ overflow-x:auto; overflow-y:auto; -webkit-overflow-scrolling:touch; max-height:calc(100vh - 360px); }
 .agenda-grid{ min-width:max-content; }
 .agenda-head-row{ display:grid; border-bottom:1px solid var(--line); position:sticky; top:0; background:#fff; z-index:2; }

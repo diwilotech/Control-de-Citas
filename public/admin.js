@@ -25,11 +25,18 @@ window.AdminShell = (function () {
   const VIEWS = ["agenda", "calendario", "espacio", "reglas", "flujo", "ajustes"];
   const VIEW_TITLES = { agenda: "Agenda", calendario: "Calendario", espacio: "Espacio", reglas: "Reglas", flujo: "Flujo", ajustes: "Ajustes" };
 
+  function syncHeaderHeight() {
+    const h = document.querySelector("header.topbar").offsetHeight;
+    document.documentElement.style.setProperty("--header-h", `${h}px`);
+  }
+  window.addEventListener("resize", syncHeaderHeight);
+
   function goView(view) {
     VIEWS.forEach((v) => { document.getElementById(`view-${v}`).style.display = v === view ? "block" : "none"; });
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
     document.querySelectorAll(".header-action").forEach((b) => b.classList.toggle("d-none", b.dataset.view !== view));
     document.getElementById("pageTitle").textContent = VIEW_TITLES[view] || "Panel";
+    syncHeaderHeight();
     if (view === "agenda") window.Agenda.render();
     if (view === "calendario") window.MonthCalendar.render();
     if (view === "espacio") window.FloorPlan.render();

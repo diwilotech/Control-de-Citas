@@ -102,9 +102,15 @@ export async function handleIncomingWhatsapp(env, business, body, origin) {
   const data = body?.data;
   if (!data || data.key?.fromMe) return;
   const text = String(data.message?.conversation || data.message?.extendedTextMessage?.text || "").trim();
-  const match = text.match(/\b(\d{4})\b/);
-  if (!match) return;
-  const pin = match[1];
+  // El mensaje puede traer otros números de 4 dígitos de paso (el año de la fecha, por ejemplo:
+  // "...para el 22 sep 2026 a las 9:00 AM. PIN #7063") — el PIN de verdad va siempre después de
+  // "PIN #", que es como lo arma la plantilla confirmWhatsapp. Si el negocio edita la plantilla y
+  // le quita el "PIN #", cae al respaldo de tomar el ÚLTIMO número de 4 dígitos del mensaje (el
+  // código casi siempre va al final).
+  const pinMatch = text.match(/PIN\s*#\s*(\d{4})\b/i);
+  const allMatches = [...text.matchAll(/\b(\d{4})\b/g)];
+  const pin = pinMatch ? pinMatch[1] : allMatches.length ? allMatches[allMatches.length - 1][1] : null;
+  if (!pin) return;
   const senderDigits = String(data.key?.remoteJid || "").replace(/\D/g, "");
   if (!senderDigits) return;
 

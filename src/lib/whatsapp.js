@@ -27,7 +27,7 @@ export async function sendWhatsApp(env, business, phone, text) {
   }
   const cleanPhone = normalizePhone(phone, business.whatsapp_country_code);
   try {
-    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/message/sendText/${instance}`, {
+    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/message/sendText/${encodeURIComponent(instance)}`, {
       method: "POST",
       headers: { "content-type": "application/json", apikey: apiKey },
       body: JSON.stringify({ number: cleanPhone, text }),

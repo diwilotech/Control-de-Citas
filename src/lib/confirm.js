@@ -1,5 +1,5 @@
 import { first, run, uid, all } from "./db.js";
-import { sendWhatsApp, normalizePhone } from "./whatsapp.js";
+import { sendWhatsApp } from "./whatsapp.js";
 import { sendEmail } from "./mailer.js";
 import { DEFAULT_TEMPLATES, fillTemplate, formatDateHuman, formatAmPm } from "./templates.js";
 
@@ -95,10 +95,16 @@ export async function sendSelfServiceNotice(env, business, appt, service, templa
 }
 
 // Webhook de Evolution API: busca un PIN de 4 dígitos en un mensaje entrante y, si machea con una
-// cita pendiente de ese negocio y ese remitente, la confirma. Nunca debe tirar error — si el
-// payload no calza con lo esperado, simplemente no hace nada (Evolution manda otros eventos
-// aparte de mensajes: conexión, estado de entrega, etc.).
+// cita pendiente de ese negocio, la confirma. Nunca debe tirar error — si el payload no calza con
+// lo esperado, simplemente no hace nada (Evolution manda otros eventos aparte de mensajes:
+// conexión, estado de entrega, etc.).
+//
+// No se valida el remitente contra el teléfono de la cita: WhatsApp está migrando las cuentas a
+// un identificador de remitente "LID" (remoteJid termina en @lid, no en @s.whatsapp.net) que ya
+// no trae el número de teléfono real — confirmado con el payload real de esta instancia de
+// Evolution. El PIN de 4 dígitos, único por negocio y con vencimiento corto, ya es suficiente.
 export async function handleIncomingWhatsapp(env, business, body, origin) {
+  if (body?.event && body.event !== "messages.upsert") return;
   const data = body?.data;
   if (!data || data.key?.fromMe) return;
   const text = String(data.message?.conversation || data.message?.extendedTextMessage?.text || "").trim();
@@ -111,17 +117,12 @@ export async function handleIncomingWhatsapp(env, business, body, origin) {
   const allMatches = [...text.matchAll(/\b(\d{4})\b/g)];
   const pin = pinMatch ? pinMatch[1] : allMatches.length ? allMatches[allMatches.length - 1][1] : null;
   if (!pin) return;
-  const senderDigits = String(data.key?.remoteJid || "").replace(/\D/g, "");
-  if (!senderDigits) return;
 
   const appt = await first(env,
     `SELECT * FROM appointments WHERE business_id=? AND status='pending_confirmation' AND confirm_channel='whatsapp'
        AND confirm_pin=? AND confirm_expires_at > ?`,
     business.id, pin, new Date().toISOString());
   if (!appt) return;
-
-  const expectedDigits = normalizePhone(appt.client_phone, business.whatsapp_country_code);
-  if (!senderDigits.endsWith(expectedDigits.slice(-10))) return;
 
   await run(env, `UPDATE appointments SET status='confirmed', confirm_pin=NULL WHERE id=?`, appt.id);
   const updated = await first(env, `SELECT * FROM appointments WHERE id=?`, appt.id);

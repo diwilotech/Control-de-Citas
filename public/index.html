@@ -112,7 +112,10 @@
   <div class="card-panel p-4 text-center mx-auto" style="max-width:460px;">
     <i class="bi bi-hourglass-split" style="font-size:2.5rem;color:var(--amber);"></i>
     <h3 class="display-font fw-bold mt-2">¡Ya casi!</h3>
-    <p class="text-muted mb-0" id="doneMsg">Te reservamos el horario. Falta confirmar.</p>
+    <p class="text-muted mb-3" id="doneMsg">Te reservamos el horario. Falta confirmar.</p>
+    <a class="btn btn-brand w-100 py-2" id="waConfirmLink" href="#" target="_blank" rel="noopener" style="display:none;">
+      <i class="bi bi-whatsapp"></i> Confirmar por WhatsApp
+    </a>
   </div>
 </div>
 
@@ -305,7 +308,7 @@ async function confirmBooking() {
   if (state.channel === "whatsapp" && !clientPhone) { toast("Escribe tu celular para mandarte el código por WhatsApp.", false); return; }
   if (state.channel === "email" && !clientEmail) { toast("Escribe tu correo para mandarte el link de confirmación.", false); return; }
   try {
-    await api("/public/book", { method: "POST", body: {
+    const res = await api("/public/book", { method: "POST", body: {
       serviceId: state.serviceId,
       specialistId: state.specialistId,
       date: state.date,
@@ -317,9 +320,18 @@ async function confirmBooking() {
     }});
     document.getElementById("bookingFlow").style.display = "none";
     document.getElementById("fabConfirm").style.display = "none";
-    document.getElementById("doneMsg").textContent = state.channel === "whatsapp"
-      ? "Te mandamos un WhatsApp con un código — respóndelo para confirmar tu cita."
-      : "Te mandamos un correo con un link — haz clic ahí para confirmar tu cita.";
+    const waLink = document.getElementById("waConfirmLink");
+    if (state.channel === "whatsapp" && res.messageResult && res.messageResult.ok && res.messageResult.waLink) {
+      document.getElementById("doneMsg").textContent = `Te reservamos el horario por ${res.messageResult.windowHours || 3}h. Toca el botón: se abre tu WhatsApp con el mensaje ya escrito, solo tienes que enviarlo para confirmar.`;
+      waLink.href = res.messageResult.waLink;
+      waLink.style.display = "inline-flex";
+    } else if (state.channel === "whatsapp") {
+      document.getElementById("doneMsg").textContent = "Tu cita quedó reservada, pero no pudimos armar el link de confirmación por WhatsApp. Contáctanos para confirmarla.";
+      waLink.style.display = "none";
+    } else {
+      document.getElementById("doneMsg").textContent = "Te mandamos un correo con un link — haz clic ahí para confirmar tu cita.";
+      waLink.style.display = "none";
+    }
     document.getElementById("doneScreen").style.display = "block";
   } catch (e) { toast(e.message, false); }
 }

@@ -30,7 +30,10 @@ function manageLink(origin, business, manageToken) {
   return `${origin}/${business.slug}/mis-citas?t=${manageToken}`;
 }
 
-// Recién reservada: manda el PIN (WhatsApp) o el link de confirmación (correo) y deja la cita
+// Recién reservada: para correo, el SERVIDOR manda un link de confirmación por SMTP. Para
+// WhatsApp NO se manda nada desde el negocio (eso es justo lo que hacía que Evolution API se
+// arriesgara a un baneo) — en vez de eso se arma un link wa.me con el mensaje (y el PIN) ya
+// escrito, para que sea el CLIENTE quien lo mande desde su propio WhatsApp. Deja la cita
 // pendiente hasta que el cliente responda/haga clic.
 export async function sendConfirmationRequest(env, business, appt, service, origin) {
   const windowHours = business.confirm_window_hours || 3;
@@ -49,15 +52,18 @@ export async function sendConfirmationRequest(env, business, appt, service, orig
     return result;
   }
 
+  const businessNumber = String(business.whatsapp_business_number || "").replace(/\D/g, "");
+  if (!businessNumber) {
+    return { ok: false, error: "Falta configurar el número de WhatsApp del negocio en Ajustes." };
+  }
   const pin = randomPin();
   await run(env, `UPDATE appointments SET confirm_pin=?, confirm_expires_at=? WHERE id=?`, pin, expires, appt.id);
-  const body = fillTemplate(await templateBody(env, business, "confirmWhatsapp"), {
+  const text = fillTemplate(await templateBody(env, business, "confirmWhatsapp"), {
     cliente: appt.client_name, servicio: service.name, fecha: formatDateHuman(appt.date), hora: formatAmPm(appt.start),
     negocio: business.name, ventana: windowHours, codigo: pin,
   });
-  const result = await sendWhatsApp(env, business, appt.client_phone, body);
-  await logMessage(env, appt.id, business.id, "confirmWhatsapp", body, result);
-  return result;
+  const waLink = `https://wa.me/${businessNumber}?text=${encodeURIComponent(text)}`;
+  return { ok: true, waLink, windowHours };
 }
 
 // Ya confirmada (PIN respondido o link clickeado): avisa y manda el link de autogestión.

@@ -73,8 +73,9 @@ export function registerPublic(router) {
     const end = `${String(Math.floor(endMin / 60) % 24).padStart(2, "0")}:${String(endMin % 60).padStart(2, "0")}`;
     const reminder = reminderDateTime(date, start, service.reminder_hours);
     const apptId = uid();
-    // Queda pendiente de confirmar (no 'confirmed' de una) — sendConfirmationRequest manda el PIN
-    // (WhatsApp) o el link (correo) y solo pasa a 'confirmed' cuando el cliente responde/hace clic.
+    // Queda pendiente de confirmar (no 'confirmed' de una) — sendConfirmationRequest arma el link
+    // wa.me con el PIN (WhatsApp, lo manda el cliente) o el correo con el link (lo manda el
+    // servidor), y solo pasa a 'confirmed' cuando el cliente lo envía/hace clic.
     await run(env,
       `INSERT INTO appointments (id, business_id, client_id, client_name, client_email, client_phone,
         specialist_id, service_id, date, start, end, status, confirm_channel, confirmation_date, confirmation_time)

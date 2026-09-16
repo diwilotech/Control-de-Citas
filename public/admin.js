@@ -98,6 +98,7 @@ window.AdminShell = (function () {
     document.getElementById("setEvoInstance").value = biz.evolution_instance || "";
     document.getElementById("setEvoApiKey").value = biz.evolution_api_key || "";
     document.getElementById("setWhatsappCountryCode").value = biz.whatsapp_country_code || "57";
+    document.getElementById("setWhatsappBusinessNumber").value = biz.whatsapp_business_number || "";
     document.getElementById("testWhatsappPrefix").textContent = `+${biz.whatsapp_country_code || "57"}`;
     document.getElementById("setWebhookUrl").value = `${location.origin}/api/${tenantSlug()}/webhook/evolution/${biz.webhook_token}`;
     document.getElementById("setConfirmWindow").value = biz.confirm_window_hours || 3;
@@ -113,6 +114,7 @@ window.AdminShell = (function () {
       evolutionInstance: document.getElementById("setEvoInstance").value.trim(),
       evolutionApiKey: document.getElementById("setEvoApiKey").value.trim(),
       whatsappCountryCode: countryCode,
+      whatsappBusinessNumber: document.getElementById("setWhatsappBusinessNumber").value.trim().replace(/\D/g, ""),
       confirmWindowHours: Math.max(1, parseInt(document.getElementById("setConfirmWindow").value, 10) || 3),
     } });
     document.getElementById("setWhatsappCountryCode").value = countryCode;
@@ -155,7 +157,7 @@ window.AdminShell = (function () {
   const TEMPLATE_LABELS = {
     booked: "Cita agendada", cancel: "Cancelación", reschedule: "Pedir reagendar", move: "Mover cita",
     reopen: "Reabrir cita", reminder: "Recordatorio",
-    confirmWhatsapp: "Pedir confirmación (WhatsApp)", confirmEmail: "Pedir confirmación (correo)",
+    confirmWhatsapp: "Mensaje que el cliente manda por WhatsApp para confirmar", confirmEmail: "Pedir confirmación (correo)",
     confirmed: "Cita confirmada", selfCancel: "Cliente canceló (link)", selfReschedule: "Cliente pidió reagendar (link)",
   };
 

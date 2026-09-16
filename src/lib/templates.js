@@ -7,7 +7,9 @@ export const DEFAULT_TEMPLATES = {
   move: "Hola {cliente}, te proponemos mover tu cita de {servicio} del {fecha} {hora} a {fechaNueva} {horaNueva}. ¿Nos confirmas si te queda bien?",
   reopen: "Hola {cliente}, vimos que tu cita de {servicio} del {fecha} quedó cancelada. ¿Quieres que te ayudemos a agendar una nueva fecha?",
   reminder: "Hola {cliente}, te recordamos tu cita de {servicio} el {fecha} a las {hora}. ¡Te esperamos!",
-  confirmWhatsapp: "Hola {cliente}, tu cita de {servicio} para el {fecha} a las {hora} quedó reservada pero falta confirmarla. Responde este WhatsApp con el código {codigo} para confirmarla. Si no respondes en {ventana}h, el horario se libera.",
+  // Este no lo manda el negocio — es el mensaje que le queda pre-escrito al CLIENTE en su propio
+  // WhatsApp (link wa.me) para que él lo envíe. Por eso va en primera persona.
+  confirmWhatsapp: "Hola, confirmo mi cita de {servicio} para el {fecha} a las {hora}. PIN #{codigo}",
   confirmEmail: "Hola {cliente}, tu cita de {servicio} para el {fecha} a las {hora} quedó reservada pero falta confirmarla. Haz clic para confirmarla: {link}\n\nSi no confirmas en {ventana}h, el horario se libera.",
   confirmed: "¡Listo {cliente}! Tu cita de {servicio} quedó CONFIRMADA para el {fecha} a las {hora}. Consulta, reagenda o cancela aquí: {link}",
   selfCancel: "Hola {cliente}, tu cita de {servicio} del {fecha} a las {hora} fue cancelada (nos avisaste desde tu link de citas).",

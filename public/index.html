@@ -175,15 +175,29 @@ function dayList() {
   });
 }
 
+// El negocio puede estar cerrado ese día de la semana (openDays) o tener una excepción puntual
+// (festivo, horario especial) — cualquiera de las dos deja el día no seleccionable en la reserva.
+function isDayClosed(iso) {
+  const ex = business.dateExceptions.find((e) => e.date === iso);
+  if (ex) return !!ex.closed;
+  const dow = new Date(iso + "T00:00:00").getDay();
+  return !business.openDays.includes(dow);
+}
+
 function renderDays() {
   const days = dayList();
-  if (!state.date) state.date = days[0].iso;
-  document.getElementById("dayStrip").innerHTML = days.map((d) => `
-    <div class="day-chip ${state.date === d.iso ? "selected" : ""}" data-iso="${d.iso}">
+  if (!state.date || isDayClosed(state.date)) {
+    state.date = (days.find((d) => !isDayClosed(d.iso)) || days[0]).iso;
+  }
+  document.getElementById("dayStrip").innerHTML = days.map((d) => {
+    const closed = isDayClosed(d.iso);
+    return `<div class="day-chip ${state.date === d.iso ? "selected" : ""} ${closed ? "closed" : ""}" data-iso="${d.iso}">
       <div class="dow">${d.label}</div>
       <div class="dnum">${d.num}</div>
-    </div>`).join("");
-  document.querySelectorAll("#dayStrip .day-chip").forEach((el) => (el.onclick = () => selectDay(el.dataset.iso)));
+      ${closed ? `<div class="dclosed">Cerrado</div>` : ""}
+    </div>`;
+  }).join("");
+  document.querySelectorAll("#dayStrip .day-chip:not(.closed)").forEach((el) => (el.onclick = () => selectDay(el.dataset.iso)));
 }
 
 function selectService(id) {

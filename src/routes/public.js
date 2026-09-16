@@ -15,10 +15,21 @@ export function registerPublic(router) {
     const byService = {};
     for (const l of links) (byService[l.service_id] ||= []).push(l.specialist_id);
 
+    // Excepciones del negocio (no de un especialista puntual) en las próximas semanas, para que
+    // la reserva pueda marcar como cerrados los días que correspondan en el selector de fecha.
+    const today = new Date().toISOString().slice(0, 10);
+    const horizon = new Date(); horizon.setDate(horizon.getDate() + 30);
+    const dateExceptions = await all(env,
+      `SELECT date, closed, open_hour, close_hour FROM date_exceptions
+       WHERE business_id=? AND specialist_id IS NULL AND date BETWEEN ? AND ?`,
+      ctx.business.id, today, horizon.toISOString().slice(0, 10));
+
     return json({
       name: ctx.business.name,
       openHour: ctx.business.open_hour,
       closeHour: ctx.business.close_hour,
+      openDays: JSON.parse(ctx.business.open_days || "[1,2,3,4,5,6]"),
+      dateExceptions,
       services,
       specialists,
       specialistsByService: byService,

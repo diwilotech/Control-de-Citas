@@ -54,6 +54,9 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 .day-chip .dnum{ font-weight:800; font-size:1.05rem; }
 .day-chip.selected{ background:var(--primary); border-color:var(--primary); color:#fff; }
 .day-chip.selected .dow{ color:rgba(255,255,255,.75); }
+.day-chip.closed{ background:#3a3d3a; border-color:#3a3d3a; color:#9a9d9a; cursor:not-allowed; opacity:.85; }
+.day-chip.closed .dow{ color:#8a8d8a; }
+.day-chip .dclosed{ font-size:.6rem; margin-top:.15rem; }
 
 .summary-panel{ background:#fff; border:1px solid var(--line); border-radius:18px; padding:1.3rem; box-shadow:0 12px 34px rgba(15,35,30,.1); }
 @media (min-width: 992px){

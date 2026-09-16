@@ -4,7 +4,7 @@
 window.Agenda = (function () {
   const { api, toast, timeToMin, minToHHMM, formatAMPM, formatHourAMPM, formatDateHuman, todayISO, dateToISO, layoutOverlaps, effectiveHours } = window.CDC;
 
-  const ROWPX = 90;
+  const ROWPX = 150;
   const DOW_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const MES_LABELS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   const STATUS_LABELS = { confirmed: "Confirmada", completed: "Completada", cancelled: "Cancelada", "no-show": "Inasistencia", reagendar: "Por reagendar" };
@@ -106,12 +106,22 @@ window.Agenda = (function () {
 
   function spaceLabel(id) { const s = spacesCache.find((s) => s.id === id); return s ? s.label : null; }
 
-  function apptCardHTML(a) {
+  function apptCardHTML(a, compact) {
     const cls = { confirmed: "", completed: "st-completed", cancelled: "st-cancelled", "no-show": "st-no-show", reagendar: "st-reagendar" }[a.status] || "";
     const badgeStyle = a.status === "confirmed" ? "background:rgba(15,82,87,.1);color:var(--primary);"
       : a.status === "completed" ? "background:#f0eee6;color:var(--muted);"
       : a.status === "reagendar" ? "background:#fff3d6;color:#8a6d1f;" : "background:#f4e6e3;color:var(--danger);";
     const label = spaceLabel(a.space_id);
+    // En citas cortas (ej. 15-20 min) no cabe toda la ficha sin que el texto se corte — se
+    // muestra una versión de una sola línea con lo esencial (hora + servicio + cliente).
+    if (compact) {
+      return `
+        <div class="appt-card compact ${cls}" data-appt="${a.id}">
+          <span class="appt-time">${formatAMPM(a.start)}</span>
+          <span class="appt-title">${a.service_name}</span>
+          <span class="appt-meta"><i class="bi bi-person"></i> ${a.client_name}</span>
+        </div>`;
+    }
     const spaceBadge = label
       ? `<span class="badge rounded-pill" style="background:rgba(15,82,87,.1);color:var(--primary);"><i class="bi bi-geo-alt-fill"></i> ${label}</span>`
       : `<span class="badge rounded-pill" style="background:#f4e6e3;color:var(--accent);"><i class="bi bi-geo-alt"></i> Sin espacio</span>`;
@@ -140,14 +150,14 @@ window.Agenda = (function () {
     const startM = rangeStartH() * 60;
     const apptsHtml = layoutOverlaps(appts, (a) => a.start, (a) => a.end).map(({ ref: a, sM, eM, col, cols }) => {
       const top = ((sM - startM) / 60) * ROWPX;
-      const height = Math.max(26, ((eM - sM) / 60) * ROWPX);
+      const height = Math.max(30, ((eM - sM) / 60) * ROWPX);
       const width = 100 / cols, left = col * width;
-      return `<div class="agenda-tl-item ${a._conflict ? "conflict" : ""}" style="top:${top}px; height:${height}px; left:calc(${left}% + 2px); width:calc(${width}% - 4px);">${apptCardHTML(a)}</div>`;
+      return `<div class="agenda-tl-item ${a._conflict ? "conflict" : ""}" style="top:${top}px; height:${height}px; left:calc(${left}% + 2px); width:calc(${width}% - 4px);">${apptCardHTML(a, height < 56)}</div>`;
     }).join("");
     const blocksHtml = blocks.map((b) => {
       const sM = timeToMin(b.start), eM = timeToMin(b.end);
       const top = ((sM - startM) / 60) * ROWPX;
-      const height = Math.max(26, ((eM - sM) / 60) * ROWPX);
+      const height = Math.max(30, ((eM - sM) / 60) * ROWPX);
       return `<div class="agenda-tl-item" style="top:${top}px; height:${height}px; left:2px; width:calc(100% - 4px);">${blockCardHTML(b)}</div>`;
     }).join("");
     return apptsHtml + blocksHtml;

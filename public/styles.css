@@ -105,6 +105,11 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 .agenda-tl-item .appt-card .appt-title{ font-size:.78rem; }
 .agenda-tl-item .appt-card .appt-meta{ font-size:.7rem; }
 .agenda-tl-item.conflict .appt-card{ border-left-color:var(--danger); box-shadow:0 0 0 1px var(--danger) inset; }
+.appt-card.compact{ display:flex; align-items:center; gap:.4rem; padding:.15rem .5rem; }
+.appt-card.compact .appt-time{ flex-shrink:0; }
+.appt-card.compact .appt-title{ font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.appt-card.compact .appt-meta{ flex-shrink:0; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:none; }
+@media (min-width:576px){ .appt-card.compact .appt-meta{ display:inline; } }
 
 .appt-card{ background:#fff; border:1px solid var(--line); border-left:4px solid var(--primary); border-radius:10px; padding:.5rem .75rem; cursor:pointer; transition:box-shadow .15s; }
 .appt-card:hover{ box-shadow:0 2px 10px rgba(0,0,0,.08); }

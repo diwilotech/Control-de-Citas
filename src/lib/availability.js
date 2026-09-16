@@ -62,6 +62,15 @@ export async function availableSlots(env, business, { serviceId, specialistId, d
     business.id, specialistId, date);
   for (const row of [...appts, ...blocks]) busy.push([toMin(row.start), toMin(row.end)]);
 
+  // Si la fecha pedida es hoy, un horario que ya pasó tampoco cuenta como disponible — sin esto,
+  // se podía reservar (y el cliente veía como libre) un horario de esta misma mañana ya pasado.
+  // Usa la hora del propio Worker (UTC); como el resto de la app, no guarda huso horario del
+  // negocio, así que puede haber unas horas de margen cerca de medianoche en negocios que abren
+  // hasta tarde — para el caso normal (reservar durante el día) queda bien.
+  const now = new Date();
+  const nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const isToday = date === now.toISOString().slice(0, 10);
+
   const step = 15;
   const startMin = hours.open * 60;
   const endMin = hours.close * 60;
@@ -69,9 +78,10 @@ export async function availableSlots(env, business, { serviceId, specialistId, d
   const allSlots = [];
   for (let t = startMin; t + service.duration_min <= endMin; t += step) {
     const overlaps = busy.some(([bs, be]) => t < be && t + service.duration_min > bs);
+    const past = isToday && t <= nowMin;
     const time = toHHMM(t);
-    allSlots.push({ time, available: !overlaps });
-    if (!overlaps) slots.push(time);
+    allSlots.push({ time, available: !overlaps && !past });
+    if (!overlaps && !past) slots.push(time);
   }
   return { slots, allSlots, durationMin: service.duration_min };
 }

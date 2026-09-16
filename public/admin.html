@@ -224,6 +224,11 @@
         <input class="form-control mb-2" id="setEvoInstance">
         <label class="label-xs d-block mb-1">API key de esa instancia (déjalo vacío para usar la de por defecto)</label>
         <input class="form-control mb-3" id="setEvoApiKey">
+        <label class="label-xs d-block mb-1">Código de país (para completar números locales, ej. celular colombiano de 10 dígitos)</label>
+        <div class="input-group mb-3" style="max-width:160px;">
+          <span class="input-group-text">+</span>
+          <input class="form-control" id="setWhatsappCountryCode" placeholder="57">
+        </div>
         <label class="label-xs d-block mb-1">Link de webhook — pégalo en Evolution API → tu instancia → Webhook</label>
         <div class="input-group mb-2">
           <input class="form-control" id="setWebhookUrl" readonly>
@@ -231,6 +236,17 @@
         </div>
         <button class="btn btn-outline-dark btn-sm mb-3" id="rotateWebhookBtn" type="button">Generar un link nuevo</button>
         <div><button class="btn btn-brand btn-sm" id="saveWhatsappBtn">Guardar</button></div>
+      </div>
+
+      <div class="card-panel p-4 mt-3">
+        <h2 class="h6 fw-bold display-font mb-3">Probar WhatsApp</h2>
+        <p class="text-muted small mb-3">Manda un mensaje de prueba para confirmar que Evolution API está bien conectada.</p>
+        <label class="label-xs d-block mb-1">Número de celular</label>
+        <div class="input-group mb-2" style="max-width:320px;">
+          <span class="input-group-text" id="testWhatsappPrefix">+57</span>
+          <input type="tel" class="form-control" id="testWhatsappPhone" placeholder="300 123 4567">
+        </div>
+        <button class="btn btn-brand btn-sm" id="testWhatsappBtn">Enviar mensaje de prueba</button>
       </div>
     </section>
 

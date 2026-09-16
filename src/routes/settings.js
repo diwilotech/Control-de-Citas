@@ -1,6 +1,7 @@
 import { all, first, run, uid } from "../lib/db.js";
 import { json, error, readJson } from "../lib/http.js";
 import { DEFAULT_TEMPLATES } from "../lib/templates.js";
+import { sendWhatsApp } from "../lib/whatsapp.js";
 
 export function registerSettings(router) {
   router.get("/api/:slug/staff/settings", async (request, env, ctx) => json(ctx.business));
@@ -10,6 +11,7 @@ export function registerSettings(router) {
     const fields = { name: b.name, open_hour: b.openHour, close_hour: b.closeHour,
       open_days: b.openDays ? JSON.stringify(b.openDays) : undefined,
       evolution_instance: b.evolutionInstance, evolution_api_key: b.evolutionApiKey,
+      whatsapp_country_code: b.whatsappCountryCode,
       whatsapp_enabled: b.whatsappEnabled === undefined ? undefined : (b.whatsappEnabled ? 1 : 0) };
     const present = Object.entries(fields).filter(([, v]) => v !== undefined);
     if (!present.length) return json(ctx.business);
@@ -23,6 +25,17 @@ export function registerSettings(router) {
     const token = uid();
     await run(env, `UPDATE businesses SET webhook_token=? WHERE id=?`, token, ctx.business.id);
     return json({ webhookToken: token });
+  });
+
+  // Manda un WhatsApp de prueba a un número cualquiera, para confirmar que Evolution API está
+  // bien conectada sin tener que esperar a una cita real. Reusa sendWhatsApp tal cual.
+  router.post("/api/:slug/staff/whatsapp/test", async (request, env, ctx) => {
+    const { phone } = await readJson(request);
+    if (!phone) return error("Falta el número.");
+    const result = await sendWhatsApp(env, ctx.business, phone,
+      `Mensaje de prueba de ${ctx.business.name} (Control de Citas). Si lo recibiste, WhatsApp está bien conectado. ✅`);
+    if (!result.ok) return error(result.error || "No se pudo enviar.", 502);
+    return json({ ok: true });
   });
 
   // Excepciones de horario por fecha (del negocio si specialistId es null, o de un especialista).

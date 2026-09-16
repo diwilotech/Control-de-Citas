@@ -86,16 +86,34 @@ window.AdminShell = (function () {
     document.getElementById("setWhatsappEnabled").checked = !!biz.whatsapp_enabled;
     document.getElementById("setEvoInstance").value = biz.evolution_instance || "";
     document.getElementById("setEvoApiKey").value = biz.evolution_api_key || "";
+    document.getElementById("setWhatsappCountryCode").value = biz.whatsapp_country_code || "57";
+    document.getElementById("testWhatsappPrefix").textContent = `+${biz.whatsapp_country_code || "57"}`;
     document.getElementById("setWebhookUrl").value = `${location.origin}/api/${tenantSlug()}/webhook/evolution/${biz.webhook_token}`;
   }
 
   document.getElementById("saveWhatsappBtn").onclick = async () => {
+    const countryCode = document.getElementById("setWhatsappCountryCode").value.trim().replace(/\D/g, "") || "57";
     await api("/staff/settings", { method: "PATCH", body: {
       whatsappEnabled: document.getElementById("setWhatsappEnabled").checked,
       evolutionInstance: document.getElementById("setEvoInstance").value.trim(),
       evolutionApiKey: document.getElementById("setEvoApiKey").value.trim(),
+      whatsappCountryCode: countryCode,
     } });
+    document.getElementById("setWhatsappCountryCode").value = countryCode;
+    document.getElementById("testWhatsappPrefix").textContent = `+${countryCode}`;
     toast("WhatsApp guardado.");
+  };
+
+  document.getElementById("testWhatsappBtn").onclick = async () => {
+    const phone = document.getElementById("testWhatsappPhone").value.trim();
+    if (!phone) return toast("Escribe un número.", false);
+    const btn = document.getElementById("testWhatsappBtn");
+    btn.disabled = true;
+    try {
+      await api("/staff/whatsapp/test", { method: "POST", body: { phone } });
+      toast("Mensaje de prueba enviado — revisa ese WhatsApp.");
+    } catch (e) { toast(e.message, false); }
+    btn.disabled = false;
   };
 
   boot();

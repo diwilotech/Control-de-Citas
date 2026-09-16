@@ -5,6 +5,15 @@
 //   body: { number, text }
 // Si tu instancia usa un contrato distinto, ajusta solo esta función — el resto de la app no
 // necesita cambiar (por eso vive en un único lugar).
+// Completa un número local (ej. celular colombiano de 10 dígitos: 300 123 4567) con el código de
+// país del negocio, para que quede en formato internacional (573001234567) — lo que espera
+// Evolution API/WhatsApp. Si el número ya trae 11+ dígitos, se asume que ya incluye el código.
+export function normalizePhone(phone, countryCode) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (digits.length > 10 || !countryCode) return digits;
+  return `${countryCode}${digits}`;
+}
+
 export async function sendWhatsApp(env, business, phone, text) {
   if (!business.whatsapp_enabled) {
     return { ok: false, skipped: true, error: "WhatsApp está desactivado para este negocio." };
@@ -15,7 +24,7 @@ export async function sendWhatsApp(env, business, phone, text) {
   if (!baseUrl || !instance || !apiKey) {
     return { ok: false, error: "Evolution API no está configurada (faltan EVOLUTION_API_URL / instancia / api key)." };
   }
-  const cleanPhone = String(phone).replace(/\D/g, "");
+  const cleanPhone = normalizePhone(phone, business.whatsapp_country_code);
   try {
     const res = await fetch(`${baseUrl.replace(/\/$/, "")}/message/sendText/${instance}`, {
       method: "POST",

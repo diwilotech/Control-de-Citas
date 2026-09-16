@@ -32,7 +32,7 @@ window.AdminShell = (function () {
     if (view === "espacio") window.FloorPlan.render();
     if (view === "reglas") window.Rules.render();
     if (view === "flujo") window.Flujo.render();
-    if (view === "ajustes") loadAjustes();
+    if (view === "ajustes") { loadAjustes(); renderTemplates(); }
   }
 
   async function boot() {
@@ -117,6 +117,23 @@ window.AdminShell = (function () {
     } catch (e) { toast(e.message, false); }
     btn.disabled = false;
   };
+
+  const TEMPLATE_LABELS = { booked: "Cita agendada", cancel: "Cancelación", reschedule: "Pedir reagendar", move: "Mover cita", reopen: "Reabrir cita", reminder: "Recordatorio" };
+
+  async function renderTemplates() {
+    const templates = await api("/staff/templates").catch(() => ({}));
+    document.getElementById("templatesForm").innerHTML = Object.entries(templates).map(([key, body]) => `
+      <div class="col-md-4">
+        <label class="label-xs d-block mb-1">${TEMPLATE_LABELS[key] || key}</label>
+        <textarea class="form-control" rows="4" data-key="${key}">${body}</textarea>
+      </div>`).join("") + `<div class="col-12"><button class="btn btn-brand btn-sm" id="saveTemplatesBtn">Guardar plantillas</button></div>`;
+    document.getElementById("saveTemplatesBtn").onclick = async () => {
+      for (const ta of document.querySelectorAll("#templatesForm textarea")) {
+        await api("/staff/templates", { method: "PATCH", body: { key: ta.dataset.key, body: ta.value } });
+      }
+      toast("Plantillas guardadas.");
+    };
+  }
 
   boot();
 

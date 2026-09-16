@@ -122,15 +122,7 @@
     <!-- ============ REGLAS ============ -->
     <section id="view-reglas" class="view" style="display:none;">
       <h1 class="fw-bold display-font mb-1">Reglas de Negocio</h1>
-      <p class="text-muted mb-4">Catálogo de servicios, especialistas y plantillas de mensajes.</p>
-
-      <div class="card-panel p-4 mb-4">
-        <h2 class="h6 fw-bold display-font mb-1"><i class="bi bi-chat-left-text"></i> Plantillas de Mensajes</h2>
-        <p class="text-muted small mb-3">
-          Placeholders: <code>{cliente}</code> <code>{servicio}</code> <code>{fecha}</code> <code>{hora}</code> <code>{fechaNueva}</code> <code>{horaNueva}</code>
-        </p>
-        <div id="templatesForm" class="row g-3"></div>
-      </div>
+      <p class="text-muted mb-4">Catálogo de servicios, especialistas y tipos de espacio.</p>
 
       <div class="card-panel p-4 mb-4">
         <h2 class="h6 fw-bold display-font mb-3"><i class="bi bi-diagram-3"></i> Tipos de espacio</h2>
@@ -224,7 +216,7 @@
     <!-- ============ AJUSTES ============ -->
     <section id="view-ajustes" class="view" style="display:none;">
       <h1 class="fw-bold display-font mb-1">Ajustes</h1>
-      <p class="text-muted mb-4">WhatsApp (Evolution API).</p>
+      <p class="text-muted mb-4">WhatsApp (Evolution API) y los mensajes que se mandan por ahí.</p>
       <div class="card-panel p-4">
         <div class="form-check form-switch mb-3">
           <input class="form-check-input" type="checkbox" id="setWhatsappEnabled">
@@ -259,6 +251,14 @@
           <input type="tel" class="form-control" id="testWhatsappPhone" placeholder="300 123 4567">
         </div>
         <button class="btn btn-brand btn-sm" id="testWhatsappBtn">Enviar mensaje de prueba</button>
+      </div>
+
+      <div class="card-panel p-4 mt-3">
+        <h2 class="h6 fw-bold display-font mb-1"><i class="bi bi-chat-left-text"></i> Plantillas de Mensajes</h2>
+        <p class="text-muted small mb-3">
+          Placeholders: <code>{cliente}</code> <code>{servicio}</code> <code>{fecha}</code> <code>{hora}</code> <code>{fechaNueva}</code> <code>{horaNueva}</code>
+        </p>
+        <div id="templatesForm" class="row g-3"></div>
       </div>
     </section>
 

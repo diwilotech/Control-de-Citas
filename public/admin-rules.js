@@ -1,9 +1,9 @@
-// Reglas de negocio: plantillas de mensajes, servicios y especialistas (con sus modales de
-// editar/añadir). Las columnas allowed_space_types/work_days y la tabla puente
-// specialist_services ya existían en el backend — esto solo les pone interfaz.
+// Reglas de negocio: servicios y especialistas (con sus modales de editar/añadir) y tipos de
+// espacio. Las plantillas de mensajes viven en Ajustes (admin.js), junto con el resto de
+// WhatsApp. Las columnas allowed_space_types/work_days y la tabla puente specialist_services ya
+// existían en el backend — esto solo les pone interfaz.
 window.Rules = (function () {
   const { api, toast } = window.CDC;
-  const TEMPLATE_LABELS = { booked: "Cita agendada", cancel: "Cancelación", reschedule: "Pedir reagendar", move: "Mover cita", reopen: "Reabrir cita", reminder: "Recordatorio" };
 
   let servicesCache = [], specialistsCache = [], spaceTypesCache = [];
   let editServiceModal = null, editSpecialistModal = null;
@@ -12,7 +12,6 @@ window.Rules = (function () {
   function typeLabel(key) { return spaceTypesCache.find((t) => t.key === key)?.label || key; }
 
   async function render() {
-    await renderTemplates();
     await renderSpaceTypes();
     await renderServices();
     await renderSpecialists();
@@ -48,22 +47,6 @@ window.Rules = (function () {
       renderSpaceTypes();
     } catch (e) { toast(e.message, false); }
   };
-
-  /* ---------- Plantillas ---------- */
-  async function renderTemplates() {
-    const templates = await api("/staff/templates").catch(() => ({}));
-    document.getElementById("templatesForm").innerHTML = Object.entries(templates).map(([key, body]) => `
-      <div class="col-md-4">
-        <label class="label-xs d-block mb-1">${TEMPLATE_LABELS[key] || key}</label>
-        <textarea class="form-control" rows="4" data-key="${key}">${body}</textarea>
-      </div>`).join("") + `<div class="col-12"><button class="btn btn-brand btn-sm" id="saveTemplatesBtn">Guardar plantillas</button></div>`;
-    document.getElementById("saveTemplatesBtn").onclick = async () => {
-      for (const ta of document.querySelectorAll("#templatesForm textarea")) {
-        await api("/staff/templates", { method: "PATCH", body: { key: ta.dataset.key, body: ta.value } });
-      }
-      toast("Plantillas guardadas.");
-    };
-  }
 
   /* ---------- Servicios ---------- */
   async function renderServices() {

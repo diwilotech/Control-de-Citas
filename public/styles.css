@@ -87,7 +87,7 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 /* Los filtros quedan fijos arriba de la pestaña Agenda; solo la grilla (abajo) hace scroll,
    tanto horizontal (columnas de especialistas) como vertical (horas) — así mover la agenda no
    empuja los filtros fuera de vista ni hace scrollear la página entera. */
-.agenda-sticky-header{ position:sticky; top:0; z-index:15; background:var(--paper); padding-top:.25rem; }
+.tab-sticky-header{ position:sticky; top:0; z-index:15; background:var(--paper); padding-top:.25rem; }
 .agenda-scroll{ overflow-x:auto; overflow-y:auto; -webkit-overflow-scrolling:touch; max-height:calc(100vh - 360px); }
 .agenda-grid{ min-width:max-content; }
 .agenda-head-row{ display:grid; border-bottom:1px solid var(--line); position:sticky; top:0; background:#fff; z-index:2; }
@@ -135,11 +135,12 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 .day-cell .staff-dots{ display:flex; flex-wrap:wrap; gap:.25rem; margin-top:auto; }
 .staff-dot{ width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:.55rem; font-weight:800; cursor:pointer; border:none; padding:0; flex-shrink:0; }
 .staff-dot.off{ background:#e7e3d8 !important; color:#b7bbb2; }
-.legend-chip{ display:inline-flex; align-items:center; gap:.35rem; font-size:.8rem; color:var(--muted); }
+.legend-chip{ display:inline-flex; align-items:center; gap:.35rem; font-size:.8rem; color:var(--muted); flex-shrink:0; white-space:nowrap; }
+.calendar-scroll{ overflow-y:auto; max-height:calc(100vh - 360px); }
 
 /* Espacio: plano del local arrastrable */
 .space-toolbar{ display:flex; flex-wrap:wrap; gap:.5rem; }
-.space-add-btn{ display:flex; align-items:center; gap:.4rem; padding:.5rem .9rem; border-radius:10px; border:1px solid var(--line); background:#fff; font-size:.82rem; font-weight:600; color:var(--ink); cursor:pointer; }
+.space-add-btn{ display:flex; align-items:center; gap:.4rem; padding:.5rem .9rem; border-radius:10px; border:1px solid var(--line); background:#fff; font-size:.82rem; font-weight:600; color:var(--ink); cursor:pointer; flex-shrink:0; white-space:nowrap; }
 .space-add-btn:hover{ border-color:var(--primary); color:var(--primary); }
 .space-add-btn[disabled]{ opacity:.4; cursor:not-allowed; }
 .grid-scroll{ overflow:auto; -webkit-overflow-scrolling:touch; border-radius:8px; }

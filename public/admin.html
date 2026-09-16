@@ -12,10 +12,17 @@
 
 <div id="toastMini"></div>
 
-<header class="topbar py-3 mb-4">
+<header class="topbar py-2 mb-3">
   <div class="container d-flex justify-content-between align-items-center">
-    <span id="bizName" class="fw-bold fs-4 display-font">Panel</span>
-    <button class="btn btn-sm btn-outline-dark" id="logoutBtn" style="display:none;">Salir</button>
+    <span id="pageTitle" class="fw-bold fs-5 display-font">Panel</span>
+    <div class="dropdown" id="userMenu" style="display:none;">
+      <button class="btn btn-sm btn-outline-dark dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
+        <i class="bi bi-person-circle"></i> <span id="userNameSmall">Usuario</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><button class="dropdown-item" id="logoutBtn">Salir</button></li>
+      </ul>
+    </div>
   </div>
 </header>
 
@@ -37,7 +44,7 @@
 
     <!-- ============ AGENDA ============ -->
     <section id="view-agenda" class="view active">
-      <div class="agenda-sticky-header">
+      <div class="tab-sticky-header">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-2">
           <div>
             <h1 class="fw-bold display-font mb-1">Agenda</h1>
@@ -82,44 +89,50 @@
 
     <!-- ============ CALENDARIO ============ -->
     <section id="view-calendario" class="view" style="display:none;">
-      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-        <div>
-          <h1 class="fw-bold display-font mb-1">Calendario</h1>
-          <p class="text-muted mb-0">Vista mensual del personal en cuadrícula.</p>
+      <div class="tab-sticky-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+          <div>
+            <h1 class="fw-bold display-font mb-1">Calendario</h1>
+            <p class="text-muted mb-0 d-none d-sm-block">Vista mensual del personal en cuadrícula.</p>
+          </div>
+          <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#businessHoursModal">
+            <i class="bi bi-shop"></i> <span class="d-none d-sm-inline">Apertura y Cierre</span>
+          </button>
         </div>
-        <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#businessHoursModal">
-          <i class="bi bi-shop"></i> Apertura y Cierre
-        </button>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <button class="month-nav-btn" id="monthPrevBtn"><i class="bi bi-chevron-left"></i></button>
+          <h2 class="h6 fw-bold display-font mb-0" id="monthLabel">—</h2>
+          <button class="month-nav-btn" id="monthNextBtn"><i class="bi bi-chevron-right"></i></button>
+        </div>
+        <div class="d-flex flex-nowrap gap-3 mb-2 overflow-x-auto" id="monthLegend"></div>
       </div>
 
       <div class="card-panel p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <button class="month-nav-btn" id="monthPrevBtn"><i class="bi bi-chevron-left"></i></button>
-          <h2 class="h5 fw-bold display-font mb-0" id="monthLabel">—</h2>
-          <button class="month-nav-btn" id="monthNextBtn"><i class="bi bi-chevron-right"></i></button>
+        <div class="calendar-scroll">
+          <div class="month-grid mb-1">
+            <span class="dow-label">Lun</span><span class="dow-label">Mar</span><span class="dow-label">Mié</span>
+            <span class="dow-label">Jue</span><span class="dow-label">Vie</span><span class="dow-label">Sáb</span><span class="dow-label">Dom</span>
+          </div>
+          <div class="month-grid" id="monthGrid"></div>
         </div>
-        <div class="d-flex flex-wrap gap-3 mb-3" id="monthLegend"></div>
-        <div class="month-grid mb-1">
-          <span class="dow-label">Lun</span><span class="dow-label">Mar</span><span class="dow-label">Mié</span>
-          <span class="dow-label">Jue</span><span class="dow-label">Vie</span><span class="dow-label">Sáb</span><span class="dow-label">Dom</span>
-        </div>
-        <div class="month-grid" id="monthGrid"></div>
       </div>
     </section>
 
     <!-- ============ ESPACIO ============ -->
     <section id="view-espacio" class="view" style="display:none;">
-      <h1 class="fw-bold display-font mb-1">Espacio</h1>
-      <p class="text-muted mb-3" id="spaceModeHint">Distribución del local: haz clic en un espacio para ver las citas del día.</p>
-      <div class="card-panel p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-          <div class="space-toolbar" id="spaceToolbar"></div>
-          <button class="btn btn-sm btn-brand" id="spaceEditToggle"><i class="bi bi-pencil"></i> Editar distribución</button>
+      <div class="tab-sticky-header">
+        <h1 class="fw-bold display-font mb-1">Espacio</h1>
+        <p class="text-muted mb-2 d-none d-sm-block" id="spaceModeHint">Distribución del local: haz clic en un espacio para ver las citas del día.</p>
+        <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
+          <div class="space-toolbar flex-nowrap overflow-x-auto" id="spaceToolbar"></div>
+          <button class="btn btn-sm btn-brand flex-shrink-0" id="spaceEditToggle"><i class="bi bi-pencil"></i> <span class="d-none d-sm-inline">Editar distribución</span></button>
         </div>
+      </div>
+      <div class="card-panel p-4">
         <div class="grid-scroll" style="max-height:720px;">
           <div class="grid-container" id="floorGrid"></div>
         </div>
-        <p class="text-muted small mt-3 mb-0" id="spaceFooterHint"></p>
+        <p class="text-muted small mt-3 mb-0 d-none d-sm-block" id="spaceFooterHint"></p>
       </div>
     </section>
 

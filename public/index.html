@@ -210,13 +210,13 @@ async function loadSlots() {
     morning.innerHTML = afternoon.innerHTML = "";
     return;
   }
-  const { slots } = await api(`/public/availability?serviceId=${state.serviceId}&specialistId=${state.specialistId}&date=${state.date}`)
-    .catch((e) => { toast(e.message, false); return { slots: [] }; });
-  const am = slots.filter((s) => s < "12:00");
-  const pm = slots.filter((s) => s >= "12:00");
+  const { allSlots } = await api(`/public/availability?serviceId=${state.serviceId}&specialistId=${state.specialistId}&date=${state.date}`)
+    .catch((e) => { toast(e.message, false); return { allSlots: [] }; });
+  const am = allSlots.filter((s) => s.time < "12:00");
+  const pm = allSlots.filter((s) => s.time >= "12:00");
   morning.innerHTML = renderSlotButtons(am) || `<p class="text-muted small mb-0">Sin horarios en la mañana.</p>`;
   afternoon.innerHTML = renderSlotButtons(pm) || `<p class="text-muted small mb-0">Sin horarios en la tarde.</p>`;
-  [morning, afternoon].forEach((wrap) => wrap.querySelectorAll(".slot-btn").forEach((btn) => (btn.onclick = () => {
+  [morning, afternoon].forEach((wrap) => wrap.querySelectorAll(".slot-btn:not(:disabled)").forEach((btn) => (btn.onclick = () => {
     document.querySelectorAll(".slot-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     state.time = btn.dataset.slot;
@@ -225,7 +225,8 @@ async function loadSlots() {
 }
 
 function renderSlotButtons(list) {
-  return list.map((s) => `<button class="btn slot-btn ${state.time === s ? "active" : ""}" data-slot="${s}">${s}</button>`).join("");
+  return list.map((s) => `<button class="btn slot-btn ${s.available ? "available" : "unavailable"} ${state.time === s.time ? "active" : ""}"
+    data-slot="${s.time}" ${s.available ? "" : "disabled"}>${s.time}</button>`).join("");
 }
 
 function updateSummary() {

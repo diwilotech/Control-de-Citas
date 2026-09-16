@@ -51,9 +51,12 @@ export async function availableSlots(env, business, { serviceId, specialistId, d
   const startMin = hours.open * 60;
   const endMin = hours.close * 60;
   const slots = [];
+  const allSlots = [];
   for (let t = startMin; t + service.duration_min <= endMin; t += step) {
     const overlaps = busy.some(([bs, be]) => t < be && t + service.duration_min > bs);
-    if (!overlaps) slots.push(toHHMM(t));
+    const time = toHHMM(t);
+    allSlots.push({ time, available: !overlaps });
+    if (!overlaps) slots.push(time);
   }
-  return { slots, durationMin: service.duration_min };
+  return { slots, allSlots, durationMin: service.duration_min };
 }

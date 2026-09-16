@@ -12,6 +12,8 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 .avatar-badge{ width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:.8rem; flex-shrink:0; }
 .topbar{ background:#fff; border-bottom:1px solid var(--line); }
 .slot-btn{ border:1px solid var(--line); border-radius:10px; padding:.5rem .3rem; background:#fff; font-weight:600; font-size:.85rem; }
+.slot-btn.available{ background:#e6f4ec; border-color:#3a9a6d; color:#1e6b45; }
+.slot-btn.unavailable{ background:#3a3d3a; border-color:#3a3d3a; color:#9a9d9a; cursor:not-allowed; opacity:.85; }
 .slot-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
 .appt-row{ border:1px solid var(--line); border-left:4px solid var(--primary); border-radius:10px; padding:.6rem .9rem; background:#fff; }
 .appt-row.st-completed{ border-left-color:var(--muted); }

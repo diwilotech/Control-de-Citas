@@ -37,34 +37,34 @@
 
     <!-- ============ AGENDA ============ -->
     <section id="view-agenda" class="view active">
-      <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
-        <div>
-          <h1 class="fw-bold display-font mb-1">Agenda</h1>
-          <p class="text-muted mb-0">Línea de tiempo del día y estado de cada cita.</p>
+      <div class="agenda-sticky-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-2">
+          <div>
+            <h1 class="fw-bold display-font mb-1">Agenda</h1>
+            <p class="text-muted mb-0 d-none d-sm-block">Línea de tiempo del día y estado de cada cita.</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#blocksModal">
+              <i class="bi bi-slash-circle"></i> Bloqueos
+            </button>
+            <button class="btn btn-brand" id="walkInOpenBtn"><i class="bi bi-person-plus"></i> Añadir cita</button>
+          </div>
         </div>
-        <div class="d-flex gap-2">
-          <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#blocksModal">
-            <i class="bi bi-slash-circle"></i> Bloqueos
-          </button>
-          <button class="btn btn-brand" id="walkInOpenBtn"><i class="bi bi-person-plus"></i> Añadir cita</button>
-        </div>
-      </div>
 
-      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-        <span class="badge rounded-pill" style="background:rgba(15,82,87,.1);color:var(--primary);font-size:.8rem;" id="totalApptsBadge">— citas</span>
-      </div>
-      <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-        <button class="month-nav-btn" id="agendaPrevBtn"><i class="bi bi-chevron-left"></i></button>
-        <span class="fw-semibold text-capitalize" id="agendaDayLabel" style="min-width:180px;">—</span>
-        <button class="month-nav-btn" id="agendaNextBtn"><i class="bi bi-chevron-right"></i></button>
-        <button class="btn btn-sm btn-link text-muted text-decoration-none ms-1" id="agendaTodayBtn">Hoy</button>
-        <div class="d-flex gap-1 ms-auto">
-          <button class="chip" id="viewModeDayBtn">1 día</button>
-          <button class="chip" id="viewModeMultiBtn">Próximos 4 días</button>
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <button class="month-nav-btn" id="agendaPrevBtn"><i class="bi bi-chevron-left"></i></button>
+          <span class="fw-semibold text-capitalize" id="agendaDayLabel" style="min-width:180px;">—</span>
+          <button class="month-nav-btn" id="agendaNextBtn"><i class="bi bi-chevron-right"></i></button>
+          <button class="btn btn-sm btn-link text-muted text-decoration-none ms-1" id="agendaTodayBtn">Hoy</button>
+          <span class="badge rounded-pill ms-1" style="background:rgba(15,82,87,.1);color:var(--primary);font-size:.8rem;" id="totalApptsBadge">— citas</span>
+          <div class="d-flex gap-1 ms-auto">
+            <button class="chip" id="viewModeDayBtn">1 día</button>
+            <button class="chip" id="viewModeMultiBtn">Próximos 4 días</button>
+          </div>
         </div>
+        <div class="d-flex flex-wrap gap-2 mb-2" id="dayStrip"></div>
+        <div class="d-flex flex-wrap gap-2 mb-2" id="specialistFilter"></div>
       </div>
-      <div class="d-flex flex-wrap gap-2 mb-3" id="dayStrip"></div>
-      <div class="d-flex flex-wrap gap-2 mb-3" id="specialistFilter"></div>
 
       <div class="card-panel p-0 mb-4 overflow-hidden">
         <div class="agenda-scroll">

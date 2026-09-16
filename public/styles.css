@@ -84,7 +84,11 @@ h1,h2,h3,.display-font{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; le
 .mini-avatar{ width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:.6rem; font-weight:800; color:#fff; flex-shrink:0; }
 
 /* Agenda: línea de tiempo proporcional (las citas se posicionan/dimensionan según su hora real) */
-.agenda-scroll{ overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
+/* Los filtros quedan fijos arriba de la pestaña Agenda; solo la grilla (abajo) hace scroll,
+   tanto horizontal (columnas de especialistas) como vertical (horas) — así mover la agenda no
+   empuja los filtros fuera de vista ni hace scrollear la página entera. */
+.agenda-sticky-header{ position:sticky; top:0; z-index:15; background:var(--paper); padding-top:.25rem; }
+.agenda-scroll{ overflow-x:auto; overflow-y:auto; -webkit-overflow-scrolling:touch; max-height:calc(100vh - 360px); }
 .agenda-grid{ min-width:max-content; }
 .agenda-head-row{ display:grid; border-bottom:1px solid var(--line); position:sticky; top:0; background:#fff; z-index:2; }
 .agenda-head-row .hour-label{ background:#fff; }

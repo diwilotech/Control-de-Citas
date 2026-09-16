@@ -80,7 +80,7 @@ El payload que arma `src/lib/whatsapp.js` asume el contrato de Evolution API v2
 El repo está conectado a **Cloudflare Workers Builds**: cada push a `main` dispara un deploy
 solo (Cloudflare clona el repo, instala dependencias y corre `wrangler deploy`). No hace falta
 GitHub Actions ni secretos en GitHub — se administra desde el dashboard de Cloudflare, en
-Workers & Pages → `control-de-citas` → Settings → Build.
+Workers & Pages → `cdcitas` → Settings → Build.
 
 Ese deploy automático **no** aplica migraciones nuevas de D1 por sí solo. Si agregas una
 migración (`migrations/0002_*.sql`), aplícala a mano antes o después del push:

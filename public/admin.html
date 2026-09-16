@@ -10,6 +10,8 @@
 </head>
 <body class="pb-5">
 
+<div id="toastMini"></div>
+
 <header class="topbar py-3 mb-4">
   <div class="container d-flex justify-content-between align-items-center">
     <span id="bizName" class="fw-bold fs-4 display-font">Panel</span>
@@ -17,10 +19,9 @@
   </div>
 </header>
 
-<main class="container" style="max-width:900px;">
-
-  <!-- LOGIN -->
-  <div id="loginView" class="card-panel p-4 mx-auto" style="max-width:400px;">
+<!-- LOGIN -->
+<div id="loginView" class="container">
+  <div class="card-panel p-4 mx-auto" style="max-width:400px;">
     <h2 class="h5 fw-bold display-font mb-3">Iniciar sesión</h2>
     <label class="label-xs d-block mb-1">Correo</label>
     <input type="email" id="loginEmail" class="form-control mb-2">
@@ -28,83 +29,193 @@
     <input type="password" inputmode="numeric" id="loginPin" maxlength="8" class="form-control mb-3" style="letter-spacing:.4em;text-align:center;">
     <button class="btn btn-brand w-100" id="loginBtn">Entrar</button>
   </div>
+</div>
 
-  <!-- APP -->
-  <div id="appView" style="display:none;">
-    <ul class="nav nav-pills mb-4 flex-wrap gap-2" id="tabs">
-      <li class="nav-item"><button class="btn btn-sm btn-outline-dark active" data-tab="agenda">Agenda</button></li>
-      <li class="nav-item"><button class="btn btn-sm btn-outline-dark" data-tab="services">Servicios</button></li>
-      <li class="nav-item"><button class="btn btn-sm btn-outline-dark" data-tab="specialists">Especialistas</button></li>
-      <li class="nav-item"><button class="btn btn-sm btn-outline-dark" data-tab="spaces">Espacios</button></li>
-      <li class="nav-item"><button class="btn btn-sm btn-outline-dark" data-tab="settings">Ajustes</button></li>
-    </ul>
+<!-- APP -->
+<div id="appView" style="display:none;">
+  <main class="container pb-5" style="max-width:1100px;">
 
-    <section id="tab-agenda">
-      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <input type="date" id="agendaDate" class="form-control" style="max-width:200px;">
-        <button class="btn btn-brand btn-sm" id="newApptBtn"><i class="bi bi-plus-lg"></i> Añadir cita</button>
-      </div>
-      <div id="agendaList" class="d-flex flex-column gap-2"></div>
-    </section>
-
-    <section id="tab-services" style="display:none;">
-      <div class="card-panel p-4 mb-3">
-        <h2 class="h6 fw-bold display-font mb-3">Añadir servicio</h2>
-        <div class="row g-2">
-          <div class="col-sm-4"><input class="form-control" id="svcName" placeholder="Nombre"></div>
-          <div class="col-sm-2"><input type="number" class="form-control" id="svcDuration" placeholder="Min" value="30"></div>
-          <div class="col-sm-2"><input type="number" class="form-control" id="svcPrice" placeholder="Precio" value="0"></div>
-          <div class="col-sm-2"><input type="number" class="form-control" id="svcCancel" placeholder="Cancel. hrs" value="4"></div>
-          <div class="col-sm-2"><input type="number" class="form-control" id="svcReminder" placeholder="Aviso hrs" value="12"></div>
+    <!-- ============ AGENDA ============ -->
+    <section id="view-agenda" class="view active">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+        <div>
+          <h1 class="fw-bold display-font mb-1">Agenda</h1>
+          <p class="text-muted mb-0">Línea de tiempo del día y estado de cada cita.</p>
         </div>
-        <button class="btn btn-brand mt-2" id="addServiceBtn">Guardar</button>
-      </div>
-      <div id="servicesList" class="d-flex flex-column gap-2"></div>
-    </section>
-
-    <section id="tab-specialists" style="display:none;">
-      <div class="card-panel p-4 mb-3">
-        <h2 class="h6 fw-bold display-font mb-3">Añadir especialista</h2>
-        <div class="row g-2">
-          <div class="col-sm-4"><input class="form-control" id="spName" placeholder="Nombre"></div>
-          <div class="col-sm-3"><input class="form-control" id="spRole" placeholder="Rol"></div>
-          <div class="col-sm-2"><input class="form-control" id="spAvatar" placeholder="Iniciales" maxlength="2"></div>
-          <div class="col-sm-2"><input type="color" class="form-control form-control-color" id="spColor" value="#0f5257"></div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#blocksModal">
+            <i class="bi bi-slash-circle"></i> Bloqueos
+          </button>
+          <button class="btn btn-brand" id="walkInOpenBtn"><i class="bi bi-person-plus"></i> Añadir cita</button>
         </div>
-        <button class="btn btn-brand mt-2" id="addSpecialistBtn">Guardar</button>
       </div>
-      <div id="specialistsList" class="d-flex flex-column gap-2"></div>
-    </section>
 
-    <section id="tab-spaces" style="display:none;">
-      <div class="card-panel p-4 mb-3">
-        <h2 class="h6 fw-bold display-font mb-3">Añadir espacio</h2>
-        <div class="row g-2">
-          <div class="col-sm-4"><input class="form-control" id="spcLabel" placeholder="Nombre (ej. Mesa 1)"></div>
-          <div class="col-sm-3">
-            <select class="form-select" id="spcType"><option value="general">General</option><option value="barra">Barra</option><option value="privado">Privado</option><option value="terraza">Terraza</option></select>
+      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <span class="badge rounded-pill" style="background:rgba(15,82,87,.1);color:var(--primary);font-size:.8rem;" id="totalApptsBadge">— citas</span>
+      </div>
+      <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+        <button class="month-nav-btn" id="agendaPrevBtn"><i class="bi bi-chevron-left"></i></button>
+        <span class="fw-semibold text-capitalize" id="agendaDayLabel" style="min-width:180px;">—</span>
+        <button class="month-nav-btn" id="agendaNextBtn"><i class="bi bi-chevron-right"></i></button>
+        <button class="btn btn-sm btn-link text-muted text-decoration-none ms-1" id="agendaTodayBtn">Hoy</button>
+        <div class="d-flex gap-1 ms-auto">
+          <button class="chip" id="viewModeDayBtn">1 día</button>
+          <button class="chip" id="viewModeMultiBtn">Próximos 4 días</button>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mb-3" id="dayStrip"></div>
+      <div class="d-flex flex-wrap gap-2 mb-3" id="specialistFilter"></div>
+
+      <div class="card-panel p-0 mb-4 overflow-hidden">
+        <div class="agenda-scroll">
+          <div class="agenda-grid">
+            <div id="agendaHead"></div>
+            <div id="agendaFull"></div>
           </div>
-          <div class="col-sm-3">
-            <select class="form-select" id="spcShape"><option value="square">Cuadrada</option><option value="rect-h">Rect. horizontal</option><option value="rect-v">Rect. vertical</option></select>
-          </div>
-          <div class="col-sm-2"><input type="number" class="form-control" id="spcCapacity" placeholder="Capacidad" value="2"></div>
         </div>
-        <button class="btn btn-brand mt-2" id="addSpaceBtn">Guardar</button>
       </div>
-      <div id="spacesList" class="d-flex flex-column gap-2"></div>
     </section>
 
-    <section id="tab-settings" style="display:none;">
-      <div class="card-panel p-4 mb-3">
-        <h2 class="h6 fw-bold display-font mb-3">Horario del negocio</h2>
-        <div class="row g-2 mb-3">
-          <div class="col-sm-6"><label class="label-xs d-block mb-1">Apertura (hora)</label><input type="number" class="form-control" id="setOpenHour"></div>
-          <div class="col-sm-6"><label class="label-xs d-block mb-1">Cierre (hora)</label><input type="number" class="form-control" id="setCloseHour"></div>
+    <!-- ============ CALENDARIO ============ -->
+    <section id="view-calendario" class="view" style="display:none;">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+          <h1 class="fw-bold display-font mb-1">Calendario</h1>
+          <p class="text-muted mb-0">Vista mensual del personal en cuadrícula.</p>
         </div>
-        <button class="btn btn-brand btn-sm" id="saveSettingsBtn">Guardar horario</button>
+        <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#businessHoursModal">
+          <i class="bi bi-shop"></i> Apertura y Cierre
+        </button>
       </div>
-      <div class="card-panel p-4 mb-3">
-        <h2 class="h6 fw-bold display-font mb-3">WhatsApp (Evolution API)</h2>
+
+      <div class="card-panel p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <button class="month-nav-btn" id="monthPrevBtn"><i class="bi bi-chevron-left"></i></button>
+          <h2 class="h5 fw-bold display-font mb-0" id="monthLabel">—</h2>
+          <button class="month-nav-btn" id="monthNextBtn"><i class="bi bi-chevron-right"></i></button>
+        </div>
+        <div class="d-flex flex-wrap gap-3 mb-3" id="monthLegend"></div>
+        <div class="month-grid mb-1">
+          <span class="dow-label">Lun</span><span class="dow-label">Mar</span><span class="dow-label">Mié</span>
+          <span class="dow-label">Jue</span><span class="dow-label">Vie</span><span class="dow-label">Sáb</span><span class="dow-label">Dom</span>
+        </div>
+        <div class="month-grid" id="monthGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============ ESPACIO ============ -->
+    <section id="view-espacio" class="view" style="display:none;">
+      <h1 class="fw-bold display-font mb-1">Espacio</h1>
+      <p class="text-muted mb-3" id="spaceModeHint">Distribución del local: haz clic en un espacio para ver las citas del día.</p>
+      <div class="card-panel p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <div class="space-toolbar" id="spaceToolbar"></div>
+          <button class="btn btn-sm btn-brand" id="spaceEditToggle"><i class="bi bi-pencil"></i> Editar distribución</button>
+        </div>
+        <div class="grid-scroll" style="max-height:720px;">
+          <div class="grid-container" id="floorGrid"></div>
+        </div>
+        <p class="text-muted small mt-3 mb-0" id="spaceFooterHint"></p>
+      </div>
+    </section>
+
+    <!-- ============ REGLAS ============ -->
+    <section id="view-reglas" class="view" style="display:none;">
+      <h1 class="fw-bold display-font mb-1">Reglas de Negocio</h1>
+      <p class="text-muted mb-4">Catálogo de servicios, especialistas y plantillas de mensajes.</p>
+
+      <div class="card-panel p-4 mb-4">
+        <h2 class="h6 fw-bold display-font mb-1"><i class="bi bi-chat-left-text"></i> Plantillas de Mensajes</h2>
+        <p class="text-muted small mb-3">
+          Placeholders: <code>{cliente}</code> <code>{servicio}</code> <code>{fecha}</code> <code>{hora}</code> <code>{fechaNueva}</code> <code>{horaNueva}</code>
+        </p>
+        <div id="templatesForm" class="row g-3"></div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card-panel p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h6 fw-bold display-font mb-0"><i class="bi bi-list-check"></i> Servicios</h2>
+              <button class="btn btn-sm btn-brand" id="addServiceOpenBtn"><i class="bi bi-plus-lg"></i> Añadir</button>
+            </div>
+            <div id="servicesList"></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card-panel p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h6 fw-bold display-font mb-0"><i class="bi bi-people"></i> Especialistas</h2>
+              <button class="btn btn-sm btn-brand" id="addSpecialistOpenBtn"><i class="bi bi-plus-lg"></i> Añadir</button>
+            </div>
+            <div id="specialistsList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FLUJO ============ -->
+    <section id="view-flujo" class="view" style="display:none;">
+      <h1 class="fw-bold display-font mb-1">Flujo</h1>
+      <p class="text-muted mb-4">Métricas de operación e ingresos.</p>
+
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+          <div class="card-panel p-4">
+            <div class="label-xs mb-2">Tasa Inasistencia</div>
+            <div class="metric-value" id="noShowRateValue">—</div>
+            <p class="small mt-1 mb-0" id="noShowRateDelta"></p>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card-panel p-4">
+            <div class="label-xs mb-2">Citas Activas Hoy</div>
+            <div class="metric-value" id="activeAgendaCount">—</div>
+            <p class="small text-muted mt-1 mb-0">Confirmadas</p>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card-panel p-4">
+            <div class="label-xs mb-2">Ingresos del Día</div>
+            <div class="metric-value" id="flujoToday">—</div>
+            <p class="small mt-1 mb-0" id="flujoDelta"></p>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card-panel p-4">
+            <div class="label-xs mb-2">Pagos Pendientes</div>
+            <div class="metric-value" id="flujoPending">—</div>
+            <p class="small text-muted mt-1 mb-0">Completadas sin cobrar</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel p-4 mb-4">
+        <div class="label-xs mb-3">Estados de Citas</div>
+        <div class="d-flex justify-content-center"><div id="statusDonut" class="donut-wrap"></div></div>
+        <div class="d-flex justify-content-center gap-4 mt-3 small flex-wrap">
+          <span><i class="bi bi-circle-fill" style="color:var(--ink);"></i> Completadas</span>
+          <span><i class="bi bi-circle-fill" style="color:rgba(15,82,87,.35);"></i> Pendientes</span>
+          <span><i class="bi bi-circle-fill" style="color:#c0472f;"></i> Canceladas/Inasistencias</span>
+        </div>
+      </div>
+
+      <div class="card-panel p-4 mb-4">
+        <div class="label-xs mb-3">Ingresos últimos 7 días</div>
+        <div id="flujoBars" class="d-flex align-items-end gap-3" style="height:160px;"></div>
+      </div>
+
+      <div class="card-panel p-4">
+        <div class="label-xs mb-3">Ingresos por Servicio</div>
+        <div id="flujoByService" class="d-flex flex-column gap-3"></div>
+      </div>
+    </section>
+
+    <!-- ============ AJUSTES ============ -->
+    <section id="view-ajustes" class="view" style="display:none;">
+      <h1 class="fw-bold display-font mb-1">Ajustes</h1>
+      <p class="text-muted mb-4">WhatsApp (Evolution API).</p>
+      <div class="card-panel p-4">
         <div class="form-check form-switch mb-3">
           <input class="form-check-input" type="checkbox" id="setWhatsappEnabled">
           <label class="form-check-label" for="setWhatsappEnabled">Enviar avisos de citas por WhatsApp</label>
@@ -119,19 +230,332 @@
           <button class="btn btn-outline-dark" id="copyWebhookBtn" type="button">Copiar</button>
         </div>
         <button class="btn btn-outline-dark btn-sm mb-3" id="rotateWebhookBtn" type="button">Generar un link nuevo</button>
-        <div>
-          <button class="btn btn-brand btn-sm" id="saveWhatsappBtn">Guardar</button>
-        </div>
-      </div>
-      <div class="card-panel p-4">
-        <h2 class="h6 fw-bold display-font mb-3">Plantillas de mensajes (WhatsApp)</h2>
-        <div id="templatesForm"></div>
+        <div><button class="btn btn-brand btn-sm" id="saveWhatsappBtn">Guardar</button></div>
       </div>
     </section>
-  </div>
-</main>
 
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="container">
+      <div class="d-flex gap-1 py-2">
+        <button class="nav-btn active flex-fill" data-view="agenda"><i class="bi bi-grid-1x2-fill"></i>Agenda</button>
+        <button class="nav-btn flex-fill" data-view="calendario"><i class="bi bi-calendar3"></i>Calendario</button>
+        <button class="nav-btn flex-fill" data-view="espacio"><i class="bi bi-diagram-3"></i>Espacio</button>
+        <button class="nav-btn flex-fill" data-view="reglas"><i class="bi bi-sliders"></i>Reglas</button>
+        <button class="nav-btn flex-fill" data-view="flujo"><i class="bi bi-graph-up-arrow"></i>Flujo</button>
+        <button class="nav-btn flex-fill" data-view="ajustes"><i class="bi bi-gear"></i>Ajustes</button>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<!-- MODAL: Asignar espacio / detalle de la cita -->
+<div class="modal fade" id="assignSpaceModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0" id="assignSpaceTitle">Cita</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="assignSpaceCurrent" class="mb-3"></div>
+        <div id="assignSpaceClientInfo" class="mb-3"></div>
+        <div id="assignSpacePendingMove" class="mb-3" style="display:none;"></div>
+        <div id="assignSpaceActions" class="d-flex gap-2 mb-3 flex-wrap"></div>
+        <div id="assignSpaceConfirmTime" class="mb-3"></div>
+        <div id="assignSpaceMessageLog" class="mb-3" style="display:none;"></div>
+        <hr class="my-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <label class="label-xs mb-0">Espacio asignado</label>
+          <button class="btn btn-sm btn-link text-danger text-decoration-none p-0" id="assignSpaceRemoveBtn" style="display:none;">
+            <i class="bi bi-x-circle"></i> Quitar espacio
+          </button>
+        </div>
+        <div style="overflow-x:auto;"><div id="assignSpaceMiniMap" style="position:relative;"></div></div>
+        <p id="assignSpaceEmpty" class="text-muted small mb-0" style="display:none;">
+          No hay espacios creados. Ve a la pestaña <strong>Espacio</strong> para agregarlos.
+        </p>
+        <div id="assignSpaceSaveWrap" style="display:none;">
+          <button class="btn btn-brand w-100 mt-3" id="assignSpaceSaveBtn"><i class="bi bi-check2"></i> Guardar espacio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Mover cita -->
+<div class="modal fade" id="moveModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0">Mover cita</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">Propón una nueva fecha y hora; la cita queda pendiente hasta que el cliente confirme.</p>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Nueva fecha</label><input type="date" id="moveModalDate" class="form-control"></div>
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Nueva hora</label><input type="time" id="moveModalStart" class="form-control"></div>
+        </div>
+        <p class="small mb-2"><i class="bi bi-question-circle"></i> ¿Enviar un mensaje al cliente avisando la propuesta?</p>
+        <div class="d-flex gap-2">
+          <button class="btn btn-brand flex-fill" id="moveSendBtn">Sí, enviar</button>
+          <button class="btn btn-outline-dark flex-fill" id="moveNoSendBtn">No enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Añadir cita -->
+<div class="modal fade" id="walkInModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0">Añadir cita</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="label-xs d-block mb-1">Nombre completo</label>
+        <input type="text" id="walkInName" class="form-control mb-3">
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Correo</label><input type="email" id="walkInEmail" class="form-control"></div>
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Celular</label><input type="tel" id="walkInPhone" class="form-control"></div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Servicio</label><select id="walkInService" class="form-select"></select></div>
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Especialista</label><select id="walkInSpecialist" class="form-select"></select></div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Fecha</label><input type="date" id="walkInDate" class="form-control"></div>
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Hora</label><input type="time" id="walkInStart" class="form-control"></div>
+        </div>
+        <button class="btn btn-brand w-100" id="walkInSaveBtn"><i class="bi bi-check2-circle"></i> Registrar cita</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Horario del día por espacio -->
+<div class="modal fade" id="tableScheduleModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0" id="tableScheduleTitle">Horario</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="tableScheduleConflictBanner" class="small fw-semibold mb-3" style="display:none;color:var(--danger);"><i class="bi bi-exclamation-triangle-fill"></i> Este espacio tiene citas cruzadas.</div>
+        <div style="max-height:60vh; overflow-y:auto;"><div id="tableScheduleTimeline" class="t-timeline"></div></div>
+        <p id="tableScheduleEmpty" class="text-muted small mb-0 mt-3" style="display:none;">Sin citas asignadas a este espacio hoy.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Editar espacio -->
+<div class="modal fade" id="editSpaceModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0">Editar espacio</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="label-xs d-block mb-1">Nombre</label>
+        <input type="text" id="editSpaceName" class="form-control mb-3">
+        <label class="label-xs d-block mb-1">Tipo de espacio</label>
+        <select id="editSpaceType" class="form-select mb-1">
+          <option value="general">General</option><option value="barra">Barra</option>
+          <option value="privado">Privado / VIP</option><option value="terraza">Terraza</option>
+        </select>
+        <p class="text-muted small mt-1 mb-3">El tipo determina qué servicios pueden usar este espacio (Reglas → Servicios).</p>
+        <button class="btn btn-brand w-100" id="editSpaceSaveBtn">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Bloqueos -->
+<div class="modal fade" id="blocksModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0"><i class="bi bi-slash-circle"></i> Bloqueos</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">Aparecen también dentro de la agenda, en la columna del especialista.</p>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Especialista</label><select id="blockSpecialist" class="form-select"></select></div>
+          <div class="col-sm-3"><label class="label-xs d-block mb-1">Fecha</label><input type="date" id="blockDate" class="form-control"></div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-3"><label class="label-xs d-block mb-1">Inicio</label><input type="time" id="blockStart" class="form-control"></div>
+          <div class="col-sm-3"><label class="label-xs d-block mb-1">Fin</label><input type="time" id="blockEnd" class="form-control"></div>
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Motivo</label><input type="text" id="blockReason" class="form-control" placeholder="Almuerzo, vacaciones..."></div>
+        </div>
+        <button class="btn btn-brand w-100" id="blockAddBtn">Aplicar bloqueo</button>
+        <div id="blocksList" class="mt-4 small"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Editar servicio -->
+<div class="modal fade" id="editServiceModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0" id="editServiceModalTitle">Editar servicio</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="label-xs d-block mb-1">Nombre</label>
+        <input type="text" id="editServiceName" class="form-control mb-3">
+        <div class="row g-3 mb-3">
+          <div class="col-6"><label class="label-xs d-block mb-1">Minutos</label><input type="number" id="editServiceDuration" class="form-control"></div>
+          <div class="col-6"><label class="label-xs d-block mb-1">Precio</label><input type="number" id="editServicePrice" class="form-control"></div>
+          <div class="col-6"><label class="label-xs d-block mb-1">Cancelación (hrs)</label><input type="number" id="editServiceCancel" class="form-control"></div>
+          <div class="col-6"><label class="label-xs d-block mb-1">Recordatorio (hrs antes)</label><input type="number" id="editServiceReminder" class="form-control"></div>
+        </div>
+        <label class="label-xs d-block mb-2">Espacios admitidos (ninguno marcado = cualquiera)</label>
+        <div id="editServiceTypes" class="d-flex flex-wrap gap-3 mb-3"></div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-danger" id="editServiceDeleteBtn"><i class="bi bi-trash3"></i> Eliminar</button>
+          <button class="btn btn-brand flex-fill" id="editServiceSaveBtn">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Editar especialista -->
+<div class="modal fade" id="editSpecialistModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0" id="editSpecialistModalTitle">Editar especialista</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="label-xs d-block mb-1">Nombre</label>
+        <input type="text" id="editSpecialistName" class="form-control mb-3">
+        <label class="label-xs d-block mb-1">Rol</label>
+        <input type="text" id="editSpecialistRole" class="form-control mb-3">
+        <div class="row g-3 mb-3">
+          <div class="col-6"><label class="label-xs d-block mb-1">Iniciales</label><input type="text" id="editSpecialistAvatar" maxlength="2" class="form-control"></div>
+          <div class="col-6"><label class="label-xs d-block mb-1">Color</label><input type="color" id="editSpecialistColor" class="form-control form-control-color w-100"></div>
+        </div>
+        <label class="label-xs d-block mb-2">Servicios que ofrece</label>
+        <div id="editSpecialistServices" class="d-flex flex-column gap-1 mb-3"></div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-danger" id="editSpecialistDeleteBtn"><i class="bi bi-trash3"></i> Eliminar</button>
+          <button class="btn btn-brand flex-fill" id="editSpecialistSaveBtn">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Vista previa del día -->
+<div class="modal fade" id="dayPreviewModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <div><h2 class="h6 fw-bold display-font mb-0" id="dayPreviewTitle">Día</h2>
+          <p class="text-muted small mb-0" id="dayPreviewCount"></p></div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="p-3 pb-0">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="label-xs mb-0"><i class="bi bi-shop"></i> Horario de este día</label>
+            <button class="btn btn-sm btn-link text-danger text-decoration-none p-0" id="dayPreviewResetBtn">
+              <i class="bi bi-arrow-counterclockwise"></i> Quitar excepción
+            </button>
+          </div>
+          <div class="d-flex align-items-end gap-3 flex-wrap">
+            <div class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" id="editDayClosed">
+              <label class="form-check-label small" for="editDayClosed">Cerrado este día</label>
+            </div>
+            <div><label class="label-xs d-block mb-1">Apertura</label><input type="number" min="0" max="23" id="editDayOpen" class="form-control form-control-sm" style="width:80px;"></div>
+            <div><label class="label-xs d-block mb-1">Cierre</label><input type="number" min="0" max="23" id="editDayClose" class="form-control form-control-sm" style="width:80px;"></div>
+            <button class="btn btn-sm btn-brand" id="dayPreviewSaveHoursBtn">Guardar horario</button>
+          </div>
+        </div>
+        <hr class="my-3">
+        <div class="px-3">
+          <label class="label-xs d-block mb-2"><i class="bi bi-people"></i> Personal que trabaja este día</label>
+          <div class="d-flex flex-wrap gap-2 mb-3" id="dayPreviewStaffList"></div>
+        </div>
+        <hr class="my-3">
+        <div class="agenda-scroll" style="max-height:60vh; overflow-y:auto;">
+          <div class="agenda-grid">
+            <div id="dayPreviewHead"></div>
+            <div id="dayPreviewBody"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar marcar libre + reagendar -->
+<div class="modal fade" id="bulkReagendarModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0"><i class="bi bi-exclamation-triangle"></i> Confirmar cambio</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" id="bulkReagendarCancelX"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Vas a marcar a <strong id="bulkReagendarSpName"></strong> como libre el <strong id="bulkReagendarDate"></strong>.</p>
+        <p class="text-muted small mb-3">Estas citas quedarán "Por reagendar":</p>
+        <div id="bulkReagendarList" class="mb-3" style="max-height:40vh;overflow-y:auto;"></div>
+        <p class="small mb-2"><i class="bi bi-question-circle"></i> ¿Avisar por WhatsApp a cada cliente?</p>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-dark flex-fill" id="bulkReagendarCancelBtn">Cancelar</button>
+          <button class="btn btn-outline-dark flex-fill" id="bulkReagendarNoNotifyBtn">Sin avisar</button>
+          <button class="btn btn-brand flex-fill" id="bulkReagendarConfirmBtn"><i class="bi bi-send"></i> Confirmar y avisar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Apertura y cierre del negocio -->
+<div class="modal fade" id="businessHoursModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header" style="border-bottom:1px solid var(--line);">
+        <h2 class="h6 fw-bold display-font mb-0"><i class="bi bi-shop"></i> Apertura y Cierre</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="label-xs d-block mb-2">Días que abre</label>
+        <div class="d-flex flex-wrap gap-2 mb-3" id="businessDaysChips"></div>
+        <div class="row g-3">
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Hora de apertura</label><input type="number" min="0" max="23" id="businessOpenHour" class="form-control"></div>
+          <div class="col-sm-6"><label class="label-xs d-block mb-1">Hora de cierre</label><input type="number" min="0" max="23" id="businessCloseHour" class="form-control"></div>
+        </div>
+        <button class="btn btn-brand w-100 mt-3" id="businessHoursSaveBtn">Guardar</button>
+        <p class="text-muted small mt-3 mb-0"><i class="bi bi-info-circle"></i> Para un día puntual (festivo, horario especial), edítalo en el Calendario junto al número del día.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/app.js"></script>
+<script src="/admin-agenda.js"></script>
+<script src="/admin-calendar.js"></script>
+<script src="/admin-floorplan.js"></script>
+<script src="/admin-rules.js"></script>
+<script src="/admin-flujo.js"></script>
 <script src="/admin.js"></script>
 </body>
 </html>

@@ -26,7 +26,7 @@ export function registerFlujo(router) {
       return row.revenue;
     };
 
-    const [todayRevenue, yesterdayRevenue, activeToday, pendingRow, last7Rows, byServiceRows, noShowNow, noShowPrev] =
+    const [todayRevenue, yesterdayRevenue, activeToday, pendingRow, last7Rows, byServiceRows, noShowNow, noShowPrev, statusRow] =
       await Promise.all([
         revenueOn(today),
         revenueOn(yesterday),
@@ -51,6 +51,13 @@ export function registerFlujo(router) {
           `SELECT SUM(CASE WHEN status='no-show' THEN 1 ELSE 0 END) AS noShow, COUNT(*) AS total
            FROM appointments WHERE business_id=? AND date BETWEEN ? AND ? AND status IN ('completed','no-show')`,
           businessId, prevMonthAgo, addDays(monthAgo, -1)),
+        first(env,
+          `SELECT
+             SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) AS completed,
+             SUM(CASE WHEN status IN ('confirmed','reagendar') THEN 1 ELSE 0 END) AS pending,
+             SUM(CASE WHEN status IN ('cancelled','no-show') THEN 1 ELSE 0 END) AS cancelledOrNoShow
+           FROM appointments WHERE business_id=? AND date BETWEEN ? AND ?`,
+          businessId, monthAgo, today),
       ]);
 
     const revenueByDate = Object.fromEntries(last7Rows.map((r) => [r.date, r.revenue]));
@@ -67,6 +74,7 @@ export function registerFlujo(router) {
       noShowRate: { value: rate(noShowNow), previousValue: rate(noShowPrev) },
       last7Days,
       byService: byServiceRows,
+      statusCounts: { completed: statusRow.completed || 0, pending: statusRow.pending || 0, cancelledOrNoShow: statusRow.cancelledOrNoShow || 0 },
     });
   });
 }

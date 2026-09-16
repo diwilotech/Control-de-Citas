@@ -45,25 +45,29 @@
           </div>
           <div class="d-flex gap-2">
             <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#blocksModal">
-              <i class="bi bi-slash-circle"></i> Bloqueos
+              <i class="bi bi-slash-circle"></i> <span class="d-none d-sm-inline">Bloqueos</span>
             </button>
-            <button class="btn btn-brand" id="walkInOpenBtn"><i class="bi bi-person-plus"></i> Añadir cita</button>
+            <button class="btn btn-brand" id="walkInOpenBtn"><i class="bi bi-person-plus"></i> <span class="d-none d-sm-inline">Añadir cita</span></button>
           </div>
         </div>
 
-        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-          <button class="month-nav-btn" id="agendaPrevBtn"><i class="bi bi-chevron-left"></i></button>
-          <span class="fw-semibold text-capitalize" id="agendaDayLabel" style="min-width:180px;">—</span>
-          <button class="month-nav-btn" id="agendaNextBtn"><i class="bi bi-chevron-right"></i></button>
-          <button class="btn btn-sm btn-link text-muted text-decoration-none ms-1" id="agendaTodayBtn">Hoy</button>
-          <span class="badge rounded-pill ms-1" style="background:rgba(15,82,87,.1);color:var(--primary);font-size:.8rem;" id="totalApptsBadge">— citas</span>
-          <div class="d-flex gap-1 ms-auto">
-            <button class="chip" id="viewModeDayBtn">1 día</button>
-            <button class="chip" id="viewModeMultiBtn">Próximos 4 días</button>
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
+          <div class="d-flex align-items-center gap-2">
+            <button class="month-nav-btn" id="agendaPrevBtn"><i class="bi bi-chevron-left"></i></button>
+            <span class="fw-semibold text-capitalize" id="agendaDayLabel" style="min-width:140px;">—</span>
+            <button class="month-nav-btn" id="agendaNextBtn"><i class="bi bi-chevron-right"></i></button>
+            <button class="btn btn-sm btn-link text-muted text-decoration-none ms-1 d-none d-sm-inline-block" id="agendaTodayBtn">Hoy</button>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill d-none d-sm-inline-block" style="background:rgba(15,82,87,.1);color:var(--primary);font-size:.8rem;" id="totalApptsBadge">— citas</span>
+            <div class="d-flex gap-1">
+              <button class="chip" id="viewModeDayBtn">1 día</button>
+              <button class="chip" id="viewModeMultiBtn">4 días</button>
+            </div>
           </div>
         </div>
-        <div class="d-flex flex-wrap gap-2 mb-2" id="dayStrip"></div>
-        <div class="d-flex flex-wrap gap-2 mb-2" id="specialistFilter"></div>
+        <div class="d-flex flex-nowrap gap-2 mb-2 overflow-x-auto" id="dayStrip"></div>
+        <div class="d-flex flex-nowrap gap-2 mb-2 overflow-x-auto" id="specialistFilter"></div>
       </div>
 
       <div class="card-panel p-0 mb-4 overflow-hidden">

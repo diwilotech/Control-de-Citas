@@ -28,6 +28,7 @@ window.AdminShell = (function () {
   function goView(view) {
     VIEWS.forEach((v) => { document.getElementById(`view-${v}`).style.display = v === view ? "block" : "none"; });
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
+    document.querySelectorAll(".header-action").forEach((b) => b.classList.toggle("d-none", b.dataset.view !== view));
     document.getElementById("pageTitle").textContent = VIEW_TITLES[view] || "Panel";
     if (view === "agenda") window.Agenda.render();
     if (view === "calendario") window.MonthCalendar.render();

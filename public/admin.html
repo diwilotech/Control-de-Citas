@@ -13,15 +13,27 @@
 <div id="toastMini"></div>
 
 <header class="topbar py-2 mb-3">
-  <div class="container d-flex justify-content-between align-items-center">
-    <span id="pageTitle" class="fw-bold fs-5 display-font">Panel</span>
-    <div class="dropdown" id="userMenu" style="display:none;">
-      <button class="btn btn-sm btn-outline-dark dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
-        <i class="bi bi-person-circle"></i> <span id="userNameSmall">Usuario</span>
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li><button class="dropdown-item" id="logoutBtn">Salir</button></li>
-      </ul>
+  <div class="container d-flex justify-content-between align-items-center gap-2">
+    <span id="pageTitle" class="fw-bold fs-5 display-font flex-shrink-0">Panel</span>
+    <div class="d-flex align-items-center gap-2">
+      <div id="headerActions" class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-dark header-action" data-view="agenda" data-bs-toggle="modal" data-bs-target="#blocksModal">
+          <i class="bi bi-slash-circle"></i> <span class="d-none d-sm-inline">Bloqueos</span>
+        </button>
+        <button class="btn btn-sm btn-brand header-action" data-view="agenda" id="walkInOpenBtn"><i class="bi bi-person-plus"></i> <span class="d-none d-sm-inline">Añadir cita</span></button>
+        <button class="btn btn-sm btn-outline-dark header-action" data-view="calendario" data-bs-toggle="modal" data-bs-target="#businessHoursModal">
+          <i class="bi bi-shop"></i> <span class="d-none d-sm-inline">Apertura y Cierre</span>
+        </button>
+        <button class="btn btn-sm btn-brand header-action" data-view="espacio" id="spaceEditToggle"><i class="bi bi-pencil"></i> <span class="d-none d-sm-inline">Editar distribución</span></button>
+      </div>
+      <div class="dropdown" id="userMenu" style="display:none;">
+        <button class="btn btn-sm btn-outline-dark dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
+          <i class="bi bi-person-circle"></i> <span id="userNameSmall">Usuario</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><button class="dropdown-item" id="logoutBtn">Salir</button></li>
+        </ul>
+      </div>
     </div>
   </div>
 </header>
@@ -45,19 +57,6 @@
     <!-- ============ AGENDA ============ -->
     <section id="view-agenda" class="view active">
       <div class="tab-sticky-header">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-2">
-          <div>
-            <h1 class="fw-bold display-font mb-1">Agenda</h1>
-            <p class="text-muted mb-0 d-none d-sm-block">Línea de tiempo del día y estado de cada cita.</p>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#blocksModal">
-              <i class="bi bi-slash-circle"></i> <span class="d-none d-sm-inline">Bloqueos</span>
-            </button>
-            <button class="btn btn-brand" id="walkInOpenBtn"><i class="bi bi-person-plus"></i> <span class="d-none d-sm-inline">Añadir cita</span></button>
-          </div>
-        </div>
-
         <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
           <div class="d-flex align-items-center gap-2">
             <button class="month-nav-btn" id="agendaPrevBtn"><i class="bi bi-chevron-left"></i></button>
@@ -90,15 +89,6 @@
     <!-- ============ CALENDARIO ============ -->
     <section id="view-calendario" class="view" style="display:none;">
       <div class="tab-sticky-header">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
-          <div>
-            <h1 class="fw-bold display-font mb-1">Calendario</h1>
-            <p class="text-muted mb-0 d-none d-sm-block">Vista mensual del personal en cuadrícula.</p>
-          </div>
-          <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#businessHoursModal">
-            <i class="bi bi-shop"></i> <span class="d-none d-sm-inline">Apertura y Cierre</span>
-          </button>
-        </div>
         <div class="d-flex justify-content-between align-items-center mb-2">
           <button class="month-nav-btn" id="monthPrevBtn"><i class="bi bi-chevron-left"></i></button>
           <h2 class="h6 fw-bold display-font mb-0" id="monthLabel">—</h2>
@@ -121,12 +111,8 @@
     <!-- ============ ESPACIO ============ -->
     <section id="view-espacio" class="view" style="display:none;">
       <div class="tab-sticky-header">
-        <h1 class="fw-bold display-font mb-1">Espacio</h1>
         <p class="text-muted mb-2 d-none d-sm-block" id="spaceModeHint">Distribución del local: haz clic en un espacio para ver las citas del día.</p>
-        <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
-          <div class="space-toolbar flex-nowrap overflow-x-auto" id="spaceToolbar"></div>
-          <button class="btn btn-sm btn-brand flex-shrink-0" id="spaceEditToggle"><i class="bi bi-pencil"></i> <span class="d-none d-sm-inline">Editar distribución</span></button>
-        </div>
+        <div class="space-toolbar flex-nowrap overflow-x-auto mb-2" id="spaceToolbar"></div>
       </div>
       <div class="card-panel p-4">
         <div class="grid-scroll" style="max-height:720px;">
@@ -138,9 +124,6 @@
 
     <!-- ============ REGLAS ============ -->
     <section id="view-reglas" class="view" style="display:none;">
-      <h1 class="fw-bold display-font mb-1">Reglas de Negocio</h1>
-      <p class="text-muted mb-4">Catálogo de servicios, especialistas y tipos de espacio.</p>
-
       <div class="card-panel p-4 mb-4">
         <h2 class="h6 fw-bold display-font mb-3"><i class="bi bi-diagram-3"></i> Tipos de espacio</h2>
         <p class="text-muted small mb-3">Se usan en Espacio (para clasificar mesas/estaciones) y en cada servicio, para restringir qué espacios admite.</p>
@@ -175,9 +158,6 @@
 
     <!-- ============ FLUJO ============ -->
     <section id="view-flujo" class="view" style="display:none;">
-      <h1 class="fw-bold display-font mb-1">Flujo</h1>
-      <p class="text-muted mb-4">Métricas de operación e ingresos.</p>
-
       <div class="row g-3 mb-4">
         <div class="col-sm-6 col-lg-3">
           <div class="card-panel p-4">
@@ -232,8 +212,6 @@
 
     <!-- ============ AJUSTES ============ -->
     <section id="view-ajustes" class="view" style="display:none;">
-      <h1 class="fw-bold display-font mb-1">Ajustes</h1>
-      <p class="text-muted mb-4">WhatsApp (Evolution API) y los mensajes que se mandan por ahí.</p>
       <div class="card-panel p-4">
         <div class="form-check form-switch mb-3">
           <input class="form-check-input" type="checkbox" id="setWhatsappEnabled">

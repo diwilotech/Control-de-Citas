@@ -14,3 +14,7 @@ run_worker_first = ["/admin"]
 binding = "DB"
 database_name = "control-de-citas-db"
 database_id = "2b827e45-bfef-4646-bbc3-23ffe75c9534"
+
+# Manda los recordatorios de cita vencidos (ver src/index.js#scheduled y src/lib/reminders.js).
+[triggers]
+crons = ["*/15 * * * *"]

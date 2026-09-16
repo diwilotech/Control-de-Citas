@@ -3,6 +3,16 @@ import { all, first } from "./db.js";
 const toMin = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
 const toHHMM = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
+// Fecha/hora por defecto para el recordatorio de una cita: reminderHours antes de que empiece.
+// La usan tanto la reserva pública como la creación manual, para no repetir esta cuenta dos veces.
+export function reminderDateTime(date, start, reminderHours) {
+  const dt = new Date(`${date}T${start}:00`);
+  dt.setHours(dt.getHours() - reminderHours);
+  const y = dt.getFullYear(), m = String(dt.getMonth() + 1).padStart(2, "0"), d = String(dt.getDate()).padStart(2, "0");
+  const hh = String(dt.getHours()).padStart(2, "0"), mm = String(dt.getMinutes()).padStart(2, "0");
+  return { date: `${y}-${m}-${d}`, time: `${hh}:${mm}` };
+}
+
 // Horario efectivo de un día para el negocio o para un especialista puntual (respeta excepciones).
 async function effectiveHours(env, business, date, specialistId) {
   const specialistEx = specialistId

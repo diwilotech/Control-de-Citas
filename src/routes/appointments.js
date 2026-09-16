@@ -1,6 +1,7 @@
 import { all, first, run, uid } from "../lib/db.js";
 import { json, error, notFound, readJson } from "../lib/http.js";
 import { sendApptMessage } from "../lib/messages.js";
+import { reminderDateTime } from "../lib/availability.js";
 
 const toMin = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
 const toHHMM = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
@@ -45,12 +46,14 @@ export function registerAppointments(router) {
     const service = await first(env, `SELECT * FROM services WHERE business_id=? AND id=?`, ctx.business.id, b.serviceId);
     if (!service) return error("Servicio no encontrado.", 404);
     const end = toHHMM(toMin(b.start) + service.duration_min);
+    const reminder = reminderDateTime(b.date, b.start, service.reminder_hours);
     const id = uid();
     await run(env,
       `INSERT INTO appointments (id, business_id, client_name, client_email, client_phone, specialist_id,
-        service_id, date, start, end, status, walk_in) VALUES (?,?,?,?,?,?,?,?,?,?,'confirmed',1)`,
+        service_id, date, start, end, status, walk_in, confirmation_date, confirmation_time)
+       VALUES (?,?,?,?,?,?,?,?,?,?,'confirmed',1,?,?)`,
       id, ctx.business.id, b.clientName, b.clientEmail || null, b.clientPhone || null, b.specialistId,
-      b.serviceId, b.date, b.start, end);
+      b.serviceId, b.date, b.start, end, reminder.date, reminder.time);
     return json(await getAppt(env, ctx.business.id, id), { status: 201 });
   });
 
@@ -58,12 +61,13 @@ export function registerAppointments(router) {
     const appt = await getAppt(env, ctx.business.id, ctx.params.id);
     if (!appt) return notFound();
     const b = await readJson(request);
-    const editable = ["space_id", "confirmation_date", "confirmation_time"];
+    const editable = ["space_id", "confirmation_date", "confirmation_time", "paid"];
     const present = editable.filter((f) => f in b);
     if (present.length) {
       const setSql = present.map((f) => `${f} = ?`).join(", ");
+      const vals = present.map((f) => (f === "paid" ? (b[f] ? 1 : 0) : b[f]));
       await run(env, `UPDATE appointments SET ${setSql} WHERE business_id=? AND id=?`,
-        ...present.map((f) => b[f]), ctx.business.id, appt.id);
+        ...vals, ctx.business.id, appt.id);
     }
     return json(await getAppt(env, ctx.business.id, appt.id));
   });

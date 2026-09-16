@@ -6,6 +6,7 @@ export const DEFAULT_TEMPLATES = {
   reschedule: "Hola {cliente}, necesitamos reprogramar tu cita de {servicio} del {fecha} a las {hora}. Por favor elige un nuevo horario cuando puedas.",
   move: "Hola {cliente}, te proponemos mover tu cita de {servicio} del {fecha} {hora} a {fechaNueva} {horaNueva}. ¿Nos confirmas si te queda bien?",
   reopen: "Hola {cliente}, vimos que tu cita de {servicio} del {fecha} quedó cancelada. ¿Quieres que te ayudemos a agendar una nueva fecha?",
+  reminder: "Hola {cliente}, te recordamos tu cita de {servicio} el {fecha} a las {hora}. ¡Te esperamos!",
 };
 
 export function formatDateHuman(iso) {

@@ -11,6 +11,9 @@ import { registerAppointments } from "./routes/appointments.js";
 import { registerResources } from "./routes/resources.js";
 import { registerSettings } from "./routes/settings.js";
 import { registerWebhook } from "./routes/webhook.js";
+import { registerSchedule } from "./routes/schedule.js";
+import { registerFlujo } from "./routes/flujo.js";
+import { sendDueReminders } from "./lib/reminders.js";
 
 const router = new Router();
 registerSetup(router);
@@ -21,6 +24,8 @@ registerAppointments(router);
 registerResources(router);
 registerSettings(router);
 registerWebhook(router);
+registerSchedule(router);
+registerFlujo(router);
 
 // Sirve un archivo estático concreto a través del binding de assets (para las rutas bonitas
 // /:slug, /:slug/admin y /admin, que no existen como archivo real).
@@ -79,5 +84,10 @@ export default {
     } catch (err) {
       return json({ error: "Error interno", detail: String(err) }, { status: 500 });
     }
+  },
+
+  // Cron (ver wrangler.toml): manda los recordatorios de cita que ya vencieron.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(sendDueReminders(env));
   },
 };

@@ -122,7 +122,7 @@ window.FloorPlan = (function () {
     const shown = appts.slice(0, maxShown).map((a) => `
       <div class="t-mini-appt ${a._conflict ? "conflict" : ""}" title="${a.specialist_name} · ${a.client_name} · ${a.service_name}">
         <span class="d-flex align-items-center gap-1" style="min-width:0;">
-          <span class="mini-avatar" style="background:${a.specialist_color};flex-shrink:0;"></span>
+          <span class="mini-avatar" style="background:${a.specialist_color};flex-shrink:0;">${a.specialist_avatar || ""}</span>
           <span>${formatAMPM(a.start)}-${formatAMPM(a.end)}</span>
         </span>
         <span>${a.client_name.split(" ")[0]}</span>
@@ -192,7 +192,7 @@ window.FloorPlan = (function () {
       const width = 100 / cols, left = col * width;
       return `<div class="t-timeline-appt ${a._conflict ? "conflict" : ""}" style="top:${top}px; height:${height}px; left:calc(${left}% + 2px); width:calc(${width}% - 4px);">
         <span class="tt-time d-flex align-items-center gap-1">
-          <span class="mini-avatar" style="background:${a.specialist_color};flex-shrink:0;"></span>
+          <span class="mini-avatar" style="background:${a.specialist_color};flex-shrink:0;">${a.specialist_avatar || ""}</span>
           ${formatAMPM(a.start)} - ${formatAMPM(a.end)}${a._conflict ? ' · <i class="bi bi-exclamation-triangle-fill"></i> Cruce' : ""}
         </span>
         <span class="tt-title">${a.service_name}</span>

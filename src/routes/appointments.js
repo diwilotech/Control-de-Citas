@@ -28,7 +28,7 @@ export function registerAppointments(router) {
     const date = url.searchParams.get("date");
     const from = url.searchParams.get("from");
     const to = url.searchParams.get("to");
-    let sql = `SELECT a.*, sp.name AS specialist_name, sp.color AS specialist_color, sv.name AS service_name
+    let sql = `SELECT a.*, sp.name AS specialist_name, sp.color AS specialist_color, sp.avatar AS specialist_avatar, sv.name AS service_name
                FROM appointments a
                JOIN specialists sp ON sp.id = a.specialist_id
                JOIN services sv ON sv.id = a.service_id

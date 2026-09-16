@@ -532,8 +532,9 @@ window.Agenda = (function () {
       map.style.width = `${maxX * MINI_CELL}px`;
       map.style.height = `${maxY * MINI_CELL}px`;
       map.style.backgroundSize = `${MINI_CELL}px ${MINI_CELL}px`;
+      const overlaps = (o) => timeToMin(o.start) < timeToMin(a.end) && timeToMin(a.start) < timeToMin(o.end);
       map.innerHTML = spaces.map((t) => {
-        const occupiedBy = dayAppts.find((o) => o.space_id === t.id && o.id !== a.id && ["confirmed", "completed"].includes(o.status));
+        const occupiedBy = dayAppts.find((o) => o.space_id === t.id && o.id !== a.id && ["confirmed", "completed"].includes(o.status) && overlaps(o));
         const compatible = !allowed || allowed.includes(t.type);
         const canSelect = compatible && !occupiedBy;
         const isSelected = pendingSpaceId === t.id;

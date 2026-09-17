@@ -60,9 +60,11 @@ export async function availableSlots(env, business, { serviceId, specialistId, d
   const busy = [];
   const appts = await all(env,
     // pending_confirmation también ocupa el horario: si no, dos personas podrían reservar el
-    // mismo cupo mientras la primera todavía no responde el PIN/confirma el correo.
-    `SELECT start, end FROM appointments WHERE business_id=? AND specialist_id=? AND date=? AND status IN ('confirmed','completed','pending_confirmation')`,
-    business.id, specialistId, date);
+    // mismo cupo mientras la primera todavía no responde el PIN/confirma el correo. excludeApptId
+    // (al reagendar) es la propia cita — si no se excluye acá, su horario ACTUAL bloquea su propio
+    // reagendamiento (incluso a la misma hora que ya tenía).
+    `SELECT start, end FROM appointments WHERE business_id=? AND specialist_id=? AND date=? AND status IN ('confirmed','completed','pending_confirmation') AND id != ?`,
+    business.id, specialistId, date, excludeApptId || "");
   const blocks = await all(env,
     `SELECT start, end FROM blocks WHERE business_id=? AND specialist_id=? AND date=?`,
     business.id, specialistId, date);

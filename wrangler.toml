@@ -18,6 +18,12 @@ binding = "DB"
 database_name = "control-de-citas-db"
 database_id = "2b827e45-bfef-4646-bbc3-23ffe75c9534"
 
+# Fotos de servicios (y lo que se agregue después) — se sirven a través del propio Worker
+# (GET /api/:slug/public/files/:name), no del dominio público de R2.
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "cdcitas-files"
+
 # Manda los recordatorios de cita vencidos (ver src/index.js#scheduled y src/lib/reminders.js).
 [triggers]
 crons = ["*/15 * * * *"]

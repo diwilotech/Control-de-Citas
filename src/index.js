@@ -14,6 +14,7 @@ import { registerWebhook } from "./routes/webhook.js";
 import { registerSchedule } from "./routes/schedule.js";
 import { registerFlujo } from "./routes/flujo.js";
 import { registerManage } from "./routes/manage.js";
+import { registerFiles } from "./routes/files.js";
 import { sendDueReminders } from "./lib/reminders.js";
 import { releaseExpiredPending } from "./lib/confirm.js";
 
@@ -28,6 +29,7 @@ registerSettings(router);
 registerWebhook(router);
 registerSchedule(router);
 registerFlujo(router);
+registerFiles(router);
 registerManage(router);
 
 // Sirve un archivo estático concreto a través del binding de assets (para las rutas bonitas

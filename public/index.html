@@ -164,9 +164,10 @@ async function init() {
 function renderServices() {
   document.getElementById("serviceList").innerHTML = business.services.map((s, i) => {
     const theme = SERVICE_THEMES[i % SERVICE_THEMES.length];
+    const photoUrl = s.photo_key ? `/api/${tenantSlug()}/public/files/${s.photo_key}` : null;
     return `
     <div class="service-card ${state.serviceId === s.id ? "selected" : ""}" data-id="${s.id}">
-      <div class="service-photo" style="background-image:${theme.gradient}">
+      <div class="service-photo" style="background-image:${photoUrl ? `url('${photoUrl}')` : theme.gradient}">
         <span class="icon-chip"><i class="bi ${theme.icon}"></i></span>
         <span class="check-chip"><i class="bi bi-check-lg"></i></span>
       </div>

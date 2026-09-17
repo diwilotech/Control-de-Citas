@@ -6,7 +6,7 @@ import { sendConfirmationRequest } from "../lib/confirm.js";
 // Endpoints públicos para la página de reserva del cliente (sin login).
 export function registerPublic(router) {
   router.get("/api/:slug/public/business", async (request, env, ctx) => {
-    const services = await all(env, `SELECT id, name, duration_min, price FROM services WHERE business_id=?`, ctx.business.id);
+    const services = await all(env, `SELECT id, name, duration_min, price, photo_key FROM services WHERE business_id=?`, ctx.business.id);
     const specialists = await all(env,
       `SELECT id, name, role, avatar, color FROM specialists WHERE business_id=?`, ctx.business.id);
     const links = await all(env,

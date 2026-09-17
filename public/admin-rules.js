@@ -3,7 +3,7 @@
 // WhatsApp. Las columnas allowed_space_types/work_days y la tabla puente specialist_services ya
 // existían en el backend — esto solo les pone interfaz.
 window.Rules = (function () {
-  const { api, toast } = window.CDC;
+  const { api, toast, tenantSlug } = window.CDC;
   const DOW_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
   let servicesCache = [], specialistsCache = [], spaceTypesCache = [];
@@ -79,6 +79,24 @@ window.Rules = (function () {
       <label class="form-check-label small" for="svcType_${key}">${label}</label></div>`).join("");
   }
 
+  function servicePhotoUrl(key) { return `/api/${tenantSlug()}/public/files/${key}`; }
+
+  function resetServicePhotoField(existingKey) {
+    document.getElementById("editServicePhoto").value = "";
+    const preview = document.getElementById("editServicePhotoPreview");
+    if (existingKey) { preview.src = servicePhotoUrl(existingKey); preview.style.display = "block"; }
+    else { preview.style.display = "none"; }
+  }
+
+  async function uploadServicePhoto(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`/api/${tenantSlug()}/staff/upload`, { method: "POST", credentials: "include", body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "No se pudo subir la imagen.");
+    return data.name;
+  }
+
   function openEditService(id) {
     const s = servicesCache.find((s) => s.id === id);
     if (!s) return;
@@ -92,6 +110,7 @@ window.Rules = (function () {
     document.getElementById("editServiceCancel").value = s.cancel_window_hours;
     document.getElementById("editServiceReminder").value = s.reminder_hours;
     document.getElementById("editServiceTypes").innerHTML = serviceTypeCheckboxes(allowed);
+    resetServicePhotoField(s.photo_key);
     editServiceModal = editServiceModal || new bootstrap.Modal(document.getElementById("editServiceModal"));
     editServiceModal.show();
   }
@@ -106,6 +125,7 @@ window.Rules = (function () {
     document.getElementById("editServiceCancel").value = 4;
     document.getElementById("editServiceReminder").value = 12;
     document.getElementById("editServiceTypes").innerHTML = serviceTypeCheckboxes([]);
+    resetServicePhotoField(null);
     editServiceModal = editServiceModal || new bootstrap.Modal(document.getElementById("editServiceModal"));
     editServiceModal.show();
   };
@@ -124,11 +144,20 @@ window.Rules = (function () {
   document.getElementById("editServiceSaveBtn").onclick = async () => {
     const data = readServiceForm();
     if (!data.name) return toast("Ponle un nombre al servicio.", false);
-    if (editingServiceId === null) await api("/staff/services", { method: "POST", body: data });
-    else await api(`/staff/services/${editingServiceId}`, { method: "PATCH", body: data });
-    editServiceModal.hide();
-    toast("Servicio guardado.");
-    renderServices();
+    const photoFile = document.getElementById("editServicePhoto").files[0];
+    const btn = document.getElementById("editServiceSaveBtn");
+    btn.disabled = true;
+    try {
+      // La foto se sube ANTES de guardar el servicio — solo si el negocio eligió una nueva; si no
+      // tocó el campo, photo_key ni se manda y el servicio conserva la que ya tenía.
+      if (photoFile) data.photo_key = await uploadServicePhoto(photoFile);
+      if (editingServiceId === null) await api("/staff/services", { method: "POST", body: data });
+      else await api(`/staff/services/${editingServiceId}`, { method: "PATCH", body: data });
+      editServiceModal.hide();
+      toast("Servicio guardado.");
+      renderServices();
+    } catch (e) { toast(e.message, false); }
+    btn.disabled = false;
   };
   document.getElementById("editServiceDeleteBtn").onclick = async () => {
     if (!confirm("¿Eliminar este servicio? No se puede deshacer.")) return;

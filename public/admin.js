@@ -158,7 +158,7 @@ window.AdminShell = (function () {
     booked: "Cita agendada", cancel: "Cancelación", reschedule: "Pedir reagendar", move: "Mover cita",
     reopen: "Reabrir cita", reminder: "Recordatorio",
     confirmWhatsapp: "Mensaje que el cliente manda por WhatsApp para confirmar", confirmEmail: "Pedir confirmación (correo)",
-    confirmed: "Cita confirmada", selfCancel: "Cliente canceló (link)", selfReschedule: "Cliente pidió reagendar (link)",
+    confirmed: "Cita confirmada", selfCancel: "Cliente canceló (link)", selfReschedule: "Cliente se reagendó (link)",
   };
 
   async function renderTemplates() {

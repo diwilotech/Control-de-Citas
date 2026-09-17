@@ -13,7 +13,7 @@ export const DEFAULT_TEMPLATES = {
   confirmEmail: "Hola {cliente}, tu cita de {servicio} para el {fecha} a las {hora} quedó reservada pero falta confirmarla. Haz clic para confirmarla: {link}\n\nSi no confirmas en {ventana}h, el horario se libera.",
   confirmed: "¡Listo {cliente}! Tu cita de {servicio} quedó CONFIRMADA para el {fecha} a las {hora}. Consulta, reagenda o cancela aquí: {link}",
   selfCancel: "Hola {cliente}, tu cita de {servicio} del {fecha} a las {hora} fue cancelada (nos avisaste desde tu link de citas).",
-  selfReschedule: "Hola {cliente}, recibimos tu solicitud para reagendar la cita de {servicio} del {fecha} a las {hora}. Nos pondremos en contacto para coordinar un nuevo horario.",
+  selfReschedule: "Hola {cliente}, tu cita de {servicio} quedó reagendada para el {fecha} a las {hora}.",
 };
 
 export function formatDateHuman(iso) {

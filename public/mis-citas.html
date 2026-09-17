@@ -59,13 +59,53 @@ function formatAmPm(hhmm) {
 
 function canAct(appt) {
   if (!["confirmed", "pending_confirmation", "reagendar"].includes(appt.status)) return false;
+  if (appt.status === "reagendar") return true; // ya está marcada para cambiar, sin importar si su hora original ya pasó
   const startMs = new Date(`${appt.date}T${appt.start}:00`).getTime();
   return startMs - Date.now() >= (appt.cancel_window_hours || 0) * 3600000;
 }
 
+let apptsCache = [];
+let business = null;
+let reschedule = null; // { apptId, date, time }
+
+function isDayClosed(iso) {
+  const ex = (business.dateExceptions || []).find((e) => e.date === iso);
+  if (ex) return !!ex.closed;
+  const dow = new Date(iso + "T00:00:00").getDay();
+  return !(business.openDays || [1, 2, 3, 4, 5, 6]).includes(dow);
+}
+function dayList() {
+  const dows = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+  const base = new Date();
+  return Array.from({ length: 10 }, (_, i) => {
+    const d = new Date(base); d.setDate(base.getDate() + i);
+    return { iso: d.toISOString().slice(0, 10), label: i === 0 ? "HOY" : dows[d.getDay()], num: d.getDate() };
+  });
+}
+
+function reschedulePanel(appt) {
+  if (!reschedule || reschedule.apptId !== appt.id) return "";
+  const days = dayList();
+  return `
+    <div class="border-top mt-2 pt-2">
+      <div class="d-flex flex-nowrap gap-2 mb-2 overflow-x-auto pb-1" id="rsDayStrip">
+        ${days.map((d) => {
+          const closed = isDayClosed(d.iso);
+          return `<div class="day-chip ${reschedule.date === d.iso ? "selected" : ""} ${closed ? "closed" : ""}" data-iso="${d.iso}" style="flex-shrink:0;">
+            <div class="dow">${d.label}</div><div class="dnum">${d.num}</div>${closed ? `<div class="dclosed">Cerrado</div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="d-flex flex-wrap gap-2 mb-2" id="rsSlots"><p class="text-muted small mb-0">Elige un día.</p></div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-brand btn-sm flex-fill" id="rsConfirmBtn" disabled>Confirmar nueva fecha</button>
+        <button class="btn btn-outline-dark btn-sm" id="rsCancelBtn">Cancelar</button>
+      </div>
+    </div>`;
+}
+
 function apptCard(appt) {
   const actionable = canAct(appt);
-  const canReschedule = actionable && appt.status !== "reagendar";
   return `
     <div class="card-panel p-3" data-id="${appt.id}">
       <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
@@ -77,38 +117,86 @@ function apptCard(appt) {
       </div>
       ${actionable ? `
         <div class="d-flex gap-2 mt-2">
-          ${canReschedule ? `<button class="btn btn-sm btn-outline-dark" data-action="reschedule">Pedir reagendar</button>` : ""}
+          <button class="btn btn-sm btn-outline-dark" data-action="reschedule">Reagendar</button>
           <button class="btn btn-sm btn-outline-danger" data-action="cancel">Cancelar</button>
         </div>` : ""}
+      ${reschedulePanel(appt)}
     </div>`;
+}
+
+async function loadRsSlots(appt) {
+  const wrap = document.getElementById("rsSlots");
+  const btn = document.getElementById("rsConfirmBtn");
+  reschedule.time = null;
+  btn.disabled = true;
+  if (!reschedule.date || isDayClosed(reschedule.date)) { wrap.innerHTML = `<p class="text-muted small mb-0">Ese día está cerrado.</p>`; return; }
+  wrap.innerHTML = `<p class="text-muted small mb-0">Cargando…</p>`;
+  const { allSlots } = await api(`/public/my-appointments/${token()}/${appt.id}/reschedule-slots?date=${reschedule.date}`)
+    .catch(() => ({ allSlots: [] }));
+  const free = allSlots.filter((s) => s.available);
+  wrap.innerHTML = free.length ? free.map((s) =>
+    `<button class="btn slot-btn available" data-slot="${s.time}">${s.time}</button>`).join("")
+    : `<p class="text-muted small mb-0">Sin horarios libres ese día.</p>`;
+  wrap.querySelectorAll(".slot-btn").forEach((b) => b.onclick = () => {
+    reschedule.time = b.dataset.slot;
+    wrap.querySelectorAll(".slot-btn").forEach((x) => x.classList.remove("active"));
+    b.classList.add("active");
+    btn.disabled = false;
+  });
+}
+
+function wireReschedulePanel(appt) {
+  const strip = document.getElementById("rsDayStrip");
+  if (!strip) return;
+  strip.querySelectorAll(".day-chip:not(.closed)").forEach((el) => el.onclick = () => {
+    reschedule.date = el.dataset.iso;
+    render(); // re-renderiza el panel (día seleccionado) y dispara loadRsSlots al final
+  });
+  document.getElementById("rsCancelBtn").onclick = () => { reschedule = null; render(); };
+  document.getElementById("rsConfirmBtn").onclick = async () => {
+    if (!reschedule.date || !reschedule.time) return;
+    try {
+      await api(`/public/my-appointments/${token()}/${appt.id}/reschedule`, { method: "POST", body: { date: reschedule.date, start: reschedule.time } });
+      toast("Listo, tu cita quedó reagendada.");
+      reschedule = null;
+      load();
+    } catch (e) { toast(e.message, false); }
+  };
+  if (reschedule.date) loadRsSlots(appt);
+}
+
+function render() {
+  const wrap = document.getElementById("apptList");
+  if (!apptsCache.length) { wrap.innerHTML = `<p class="text-muted">Todavía no tienes citas.</p>`; return; }
+  wrap.innerHTML = apptsCache.map(apptCard).join("");
+  wrap.querySelectorAll("[data-action]").forEach((btn) => {
+    const id = btn.closest("[data-id]").dataset.id;
+    const action = btn.dataset.action;
+    btn.onclick = () => action === "reschedule" ? (reschedule = { apptId: id, date: null, time: null }, render()) : act(id, action, "¿Seguro que quieres cancelar esta cita?");
+  });
+  if (reschedule) wireReschedulePanel(apptsCache.find((a) => a.id === reschedule.apptId));
 }
 
 async function act(apptId, action, confirmMsg) {
   if (confirmMsg && !confirm(confirmMsg)) return;
   try {
     await api(`/public/my-appointments/${token()}/${apptId}/${action}`, { method: "POST" });
-    toast(action === "cancel" ? "Cita cancelada." : "Listo, pediste reagendar. Te contactaremos.");
+    toast("Cita cancelada.");
     load();
   } catch (e) { toast(e.message, false); }
 }
 
 async function load() {
   try {
-    const data = await api(`/public/my-appointments/${token()}`);
+    const [data] = await Promise.all([
+      api(`/public/my-appointments/${token()}`),
+      api(`/public/business`).then((b) => { business = b; }).catch(() => { business = { openDays: [1, 2, 3, 4, 5, 6], dateExceptions: [] }; }),
+    ]);
     document.getElementById("bizName").textContent = data.business.name;
     document.getElementById("clientName").textContent = data.client.name;
     document.getElementById("listWrap").style.display = "block";
-    const wrap = document.getElementById("apptList");
-    if (!data.appointments.length) {
-      wrap.innerHTML = `<p class="text-muted">Todavía no tienes citas.</p>`;
-      return;
-    }
-    wrap.innerHTML = data.appointments.map(apptCard).join("");
-    wrap.querySelectorAll("[data-action]").forEach((btn) => {
-      const id = btn.closest("[data-id]").dataset.id;
-      const action = btn.dataset.action;
-      btn.onclick = () => act(id, action, action === "cancel" ? "¿Seguro que quieres cancelar esta cita?" : null);
-    });
+    apptsCache = data.appointments;
+    render();
   } catch (e) {
     document.getElementById("noToken").style.display = "block";
   }

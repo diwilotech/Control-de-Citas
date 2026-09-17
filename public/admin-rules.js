@@ -9,6 +9,7 @@ window.Rules = (function () {
   let servicesCache = [], specialistsCache = [], spaceTypesCache = [];
   let editServiceModal = null, editSpecialistModal = null;
   let editingServiceId = null, editingSpecialistId = null;
+  let pendingServicePhotoBlob = null;
 
   function typeLabel(key) { return spaceTypesCache.find((t) => t.key === key)?.label || key; }
 
@@ -83,14 +84,30 @@ window.Rules = (function () {
 
   function resetServicePhotoField(existingKey) {
     document.getElementById("editServicePhoto").value = "";
+    pendingServicePhotoBlob = null;
     const preview = document.getElementById("editServicePhotoPreview");
     if (existingKey) { preview.src = servicePhotoUrl(existingKey); preview.style.display = "block"; }
     else { preview.style.display = "none"; }
   }
 
-  async function uploadServicePhoto(file) {
+  // Al elegir un archivo se abre el recortador (Cropper.js) en vez de subirlo tal cual — la
+  // franja de foto de servicio es ancha y baja (background-size:cover), así que se sugiere ese
+  // recuadro; el negocio puede agrandarlo más allá de la foto para rellenar con un color.
+  document.getElementById("editServicePhoto").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const blob = await window.ImgCropper.open(file, { aspectRatio: 2.4 });
+    if (!blob) return;
+    pendingServicePhotoBlob = blob;
+    const preview = document.getElementById("editServicePhotoPreview");
+    preview.src = URL.createObjectURL(blob);
+    preview.style.display = "block";
+  });
+
+  async function uploadServicePhoto(blob) {
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", blob, "foto.png");
     const res = await fetch(`/api/${tenantSlug()}/staff/upload`, { method: "POST", credentials: "include", body: fd });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || "No se pudo subir la imagen.");
@@ -144,16 +161,16 @@ window.Rules = (function () {
   document.getElementById("editServiceSaveBtn").onclick = async () => {
     const data = readServiceForm();
     if (!data.name) return toast("Ponle un nombre al servicio.", false);
-    const photoFile = document.getElementById("editServicePhoto").files[0];
     const btn = document.getElementById("editServiceSaveBtn");
     btn.disabled = true;
     try {
-      // La foto se sube ANTES de guardar el servicio — solo si el negocio eligió una nueva; si no
-      // tocó el campo, photo_key ni se manda y el servicio conserva la que ya tenía.
-      if (photoFile) data.photo_key = await uploadServicePhoto(photoFile);
+      // La foto (ya recortada) se sube ANTES de guardar el servicio — solo si el negocio eligió
+      // una nueva; si no tocó el campo, photo_key ni se manda y conserva la que ya tenía.
+      if (pendingServicePhotoBlob) data.photo_key = await uploadServicePhoto(pendingServicePhotoBlob);
       if (editingServiceId === null) await api("/staff/services", { method: "POST", body: data });
       else await api(`/staff/services/${editingServiceId}`, { method: "PATCH", body: data });
       editServiceModal.hide();
+      pendingServicePhotoBlob = null;
       toast("Servicio guardado.");
       renderServices();
     } catch (e) { toast(e.message, false); }

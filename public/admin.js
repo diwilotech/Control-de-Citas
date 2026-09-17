@@ -109,19 +109,34 @@ window.AdminShell = (function () {
     else preview.style.display = "none";
   }
 
+  let pendingLogoBlob = null;
+
+  // El logo se ve como cuadrado (navbar-brand-mark) — se abre el recortador con esa proporción en
+  // vez de subir la imagen elegida tal cual.
+  document.getElementById("setLogoFile").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const blob = await window.ImgCropper.open(file, { aspectRatio: 1 });
+    if (!blob) return;
+    pendingLogoBlob = blob;
+    const preview = document.getElementById("setLogoPreview");
+    preview.src = URL.createObjectURL(blob);
+    preview.style.display = "block";
+  });
+
   document.getElementById("saveLogoBtn").onclick = async () => {
-    const file = document.getElementById("setLogoFile").files[0];
-    if (!file) return toast("Elige una imagen primero.", false);
+    if (!pendingLogoBlob) return toast("Elige una imagen primero.", false);
     const btn = document.getElementById("saveLogoBtn");
     btn.disabled = true;
     try {
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", pendingLogoBlob, "logo.png");
       const res = await fetch(`/api/${tenantSlug()}/staff/upload`, { method: "POST", credentials: "include", body: fd });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "No se pudo subir la imagen.");
       await api("/staff/settings", { method: "PATCH", body: { logoKey: data.name } });
-      document.getElementById("setLogoFile").value = "";
+      pendingLogoBlob = null;
       toast("Logo guardado.");
       loadAjustes();
     } catch (e) { toast(e.message, false); }

@@ -13,7 +13,7 @@
 <nav class="navbar navbar-expand-md" style="background:#0a3a3d;">
   <div class="container">
     <span class="navbar-brand d-flex align-items-center gap-2 text-white mb-0">
-      <span class="navbar-brand-mark"><i class="bi bi-calendar2-heart"></i></span>
+      <span class="navbar-brand-mark" id="bizMark" style="overflow:hidden;"><i class="bi bi-calendar2-heart"></i></span>
       <span class="fw-bold" id="bizName">Mis citas</span>
     </span>
   </div>
@@ -38,7 +38,7 @@
 
 <script src="/app.js"></script>
 <script>
-const { api, toast, dateToISO } = window.CDC;
+const { api, toast, dateToISO, tenantSlug } = window.CDC;
 
 const STATUS_LABELS = { confirmed: "Confirmada", pending_confirmation: "Pendiente de confirmar", completed: "Completada", cancelled: "Cancelada", "no-show": "Inasistencia", reagendar: "Por reagendar" };
 const STATUS_COLORS = { confirmed: "#0f5257", pending_confirmation: "#8a6d1f", completed: "#6b7570", cancelled: "#c0472f", "no-show": "#c0472f", reagendar: "#8a5a1f" };
@@ -197,6 +197,9 @@ async function load() {
       api(`/public/business`).then((b) => { business = b; }).catch(() => { business = { openDays: [1, 2, 3, 4, 5, 6], dateExceptions: [] }; }),
     ]);
     document.getElementById("bizName").textContent = data.business.name;
+    if (business.logoKey) {
+      document.getElementById("bizMark").innerHTML = `<img src="/api/${tenantSlug()}/public/files/${business.logoKey}" style="width:100%;height:100%;object-fit:cover;">`;
+    }
     document.getElementById("clientName").textContent = data.client.name;
     document.getElementById("listWrap").style.display = "block";
     apptsCache = data.appointments;

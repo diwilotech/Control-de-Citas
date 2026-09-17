@@ -26,6 +26,7 @@ export function registerPublic(router) {
 
     return json({
       name: ctx.business.name,
+      logoKey: ctx.business.logo_key,
       openHour: ctx.business.open_hour,
       closeHour: ctx.business.close_hour,
       openDays: JSON.parse(ctx.business.open_days || "[1,2,3,4,5,6]"),

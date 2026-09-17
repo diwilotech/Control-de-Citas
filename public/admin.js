@@ -104,7 +104,29 @@ window.AdminShell = (function () {
     document.getElementById("setConfirmWindow").value = biz.confirm_window_hours || 3;
     document.getElementById("setGmailUser").value = biz.gmail_user || "";
     document.getElementById("setGmailAppPassword").value = biz.gmail_app_password || "";
+    const preview = document.getElementById("setLogoPreview");
+    if (biz.logo_key) { preview.src = `/api/${tenantSlug()}/public/files/${biz.logo_key}`; preview.style.display = "block"; }
+    else preview.style.display = "none";
   }
+
+  document.getElementById("saveLogoBtn").onclick = async () => {
+    const file = document.getElementById("setLogoFile").files[0];
+    if (!file) return toast("Elige una imagen primero.", false);
+    const btn = document.getElementById("saveLogoBtn");
+    btn.disabled = true;
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`/api/${tenantSlug()}/staff/upload`, { method: "POST", credentials: "include", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "No se pudo subir la imagen.");
+      await api("/staff/settings", { method: "PATCH", body: { logoKey: data.name } });
+      document.getElementById("setLogoFile").value = "";
+      toast("Logo guardado.");
+      loadAjustes();
+    } catch (e) { toast(e.message, false); }
+    btn.disabled = false;
+  };
 
   document.getElementById("saveWhatsappBtn").onclick = async () => {
     const countryCode = document.getElementById("setWhatsappCountryCode").value.trim().replace(/\D/g, "") || "57";

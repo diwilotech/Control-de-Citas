@@ -212,6 +212,16 @@
 
     <!-- ============ AJUSTES ============ -->
     <section id="view-ajustes" class="view" style="display:none;">
+      <div class="card-panel p-4 mb-3">
+        <h2 class="h6 fw-bold display-font mb-3">Logo del negocio</h2>
+        <p class="text-muted small mb-3">Se ve en la página de reserva y en "mis citas" — si no subes uno, se queda el ícono de siempre.</p>
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <img id="setLogoPreview" style="display:none;width:56px;height:56px;object-fit:cover;border-radius:12px;">
+          <input type="file" accept="image/*" id="setLogoFile" class="form-control">
+        </div>
+        <button class="btn btn-brand btn-sm" id="saveLogoBtn">Guardar logo</button>
+      </div>
+
       <div class="card-panel p-4">
         <div class="form-check form-switch mb-3">
           <input class="form-check-input" type="checkbox" id="setWhatsappEnabled">

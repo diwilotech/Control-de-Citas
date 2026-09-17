@@ -13,7 +13,7 @@
 <nav class="navbar navbar-expand-md" style="background:#0a3a3d;">
   <div class="container">
     <span class="navbar-brand d-flex align-items-center gap-2 text-white mb-0">
-      <span class="navbar-brand-mark"><i class="bi bi-calendar2-heart"></i></span>
+      <span class="navbar-brand-mark" id="bizMark" style="overflow:hidden;"><i class="bi bi-calendar2-heart"></i></span>
       <span class="fw-bold" id="bizName">Reservar cita</span>
     </span>
   </div>
@@ -149,6 +149,9 @@ async function init() {
   if (!business) { document.getElementById("noTenant").style.display = "block"; return; }
 
   document.getElementById("bizName").textContent = business.name;
+  if (business.logoKey) {
+    document.getElementById("bizMark").innerHTML = `<img src="/api/${tenantSlug()}/public/files/${business.logoKey}" style="width:100%;height:100%;object-fit:cover;">`;
+  }
   document.getElementById("bookingFlow").style.display = "block";
   document.getElementById("confirmBtn").onclick = confirmBooking;
   document.getElementById("fabConfirm").onclick = confirmBooking;

@@ -46,7 +46,11 @@ async function effectiveHours(env, business, date, specialistId) {
 }
 
 // Calcula los horarios de inicio disponibles (grilla de 15 min) para un servicio+especialista+fecha.
-export async function availableSlots(env, business, { serviceId, specialistId, date }) {
+// clientId (opcional): si se manda, también se bloquean los horarios donde ese MISMO cliente ya
+// tiene otra cita ese día con OTRO especialista — si no, un cliente con varias citas podía terminar
+// con dos que se cruzan entre sí (excludeApptId es la cita que se está reagendando, para no
+// chocar contra ella misma).
+export async function availableSlots(env, business, { serviceId, specialistId, date, clientId, excludeApptId }) {
   const service = await first(env, `SELECT * FROM services WHERE business_id=? AND id=?`, business.id, serviceId);
   if (!service) return { error: "Servicio no encontrado" };
 
@@ -63,6 +67,13 @@ export async function availableSlots(env, business, { serviceId, specialistId, d
     `SELECT start, end FROM blocks WHERE business_id=? AND specialist_id=? AND date=?`,
     business.id, specialistId, date);
   for (const row of [...appts, ...blocks]) busy.push([toMin(row.start), toMin(row.end)]);
+
+  if (clientId) {
+    const clientAppts = await all(env,
+      `SELECT start, end FROM appointments WHERE business_id=? AND client_id=? AND date=? AND status IN ('confirmed','pending_confirmation') AND id != ?`,
+      business.id, clientId, date, excludeApptId || "");
+    for (const row of clientAppts) busy.push([toMin(row.start), toMin(row.end)]);
+  }
 
   // Si la fecha pedida es hoy, un horario que ya pasó tampoco cuenta como disponible — sin esto,
   // se podía reservar (y el cliente veía como libre) un horario de esta misma mañana ya pasado.

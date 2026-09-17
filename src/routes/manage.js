@@ -73,7 +73,9 @@ export function registerManage(router) {
     if (!appt) return notFound();
     const date = new URL(request.url).searchParams.get("date");
     if (!date) return error("Falta la fecha.");
-    return json(await availableSlots(env, ctx.business, { serviceId: appt.service_id, specialistId: appt.specialist_id, date }));
+    return json(await availableSlots(env, ctx.business, {
+      serviceId: appt.service_id, specialistId: appt.specialist_id, date, clientId: appt.client_id, excludeApptId: appt.id,
+    }));
   });
 
   router.post("/api/:slug/public/my-appointments/:token/:apptId/reschedule", async (request, env, ctx) => {
@@ -88,8 +90,10 @@ export function registerManage(router) {
 
     const { date, start } = await readJson(request);
     if (!date || !start) return error("Falta la fecha y hora nuevas.");
-    const { slots } = await availableSlots(env, ctx.business, { serviceId: appt.service_id, specialistId: appt.specialist_id, date });
-    if (!slots.includes(start)) return error("Ese horario ya no está disponible; elige otro.", 409);
+    const { slots } = await availableSlots(env, ctx.business, {
+      serviceId: appt.service_id, specialistId: appt.specialist_id, date, clientId: appt.client_id, excludeApptId: appt.id,
+    });
+    if (!slots.includes(start)) return error("Ese horario ya no está disponible (o se cruza con otra cita tuya); elige otro.", 409);
 
     const end = toHHMM(toMin(start) + appt.duration_min);
     await run(env, `UPDATE appointments SET date=?, start=?, end=?, space_id=NULL WHERE id=?`, date, start, end, appt.id);

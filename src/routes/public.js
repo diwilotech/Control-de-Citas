@@ -56,12 +56,16 @@ export function registerPublic(router) {
     const service = await first(env, `SELECT * FROM services WHERE business_id=? AND id=?`, ctx.business.id, serviceId);
     if (!service) return error("Servicio no encontrado.", 404);
 
-    const { slots } = await availableSlots(env, ctx.business, { serviceId, specialistId, date });
-    if (!slots.includes(start)) return error("Ese horario ya no está disponible; elige otro.", 409);
-
+    // Si es un cliente que ya reservó antes (mismo celular), se busca ANTES del chequeo de
+    // disponibilidad para poder bloquear también los horarios donde ya tiene otra cita suya ese
+    // día (con cualquier especialista) — si no, podía terminar con dos citas que se cruzan.
     let client = clientPhone
       ? await first(env, `SELECT * FROM clients WHERE business_id=? AND phone=?`, ctx.business.id, clientPhone)
       : null;
+
+    const { slots } = await availableSlots(env, ctx.business, { serviceId, specialistId, date, clientId: client?.id });
+    if (!slots.includes(start)) return error("Ese horario ya no está disponible (o se cruza con otra cita tuya); elige otro.", 409);
+
     if (!client) {
       const clientId = uid();
       await run(env, `INSERT INTO clients (id, business_id, name, email, phone) VALUES (?,?,?,?,?)`,

@@ -121,7 +121,7 @@
 
 <script src="/app.js"></script>
 <script>
-const { api, tenantSlug, toast } = window.CDC;
+const { api, tenantSlug, toast, dateToISO } = window.CDC;
 
 // Paleta rotativa para las tarjetas de servicio (la base de datos no guarda foto/ícono por servicio).
 const SERVICE_THEMES = [
@@ -197,7 +197,9 @@ function dayList() {
   const base = new Date();
   return [0, 1, 2, 3, 4, 5, 6].map((i) => {
     const d = new Date(base); d.setDate(base.getDate() + i);
-    return { iso: d.toISOString().slice(0, 10), label: i === 0 ? "HOY" : dows[d.getDay()], num: d.getDate() };
+    // dateToISO (no d.toISOString()) — toISOString() convierte a UTC, así que en horas de la
+    // noche podía devolver el día siguiente al que en realidad se ve/elige en pantalla.
+    return { iso: dateToISO(d), label: i === 0 ? "HOY" : dows[d.getDay()], num: d.getDate() };
   });
 }
 

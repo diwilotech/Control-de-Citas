@@ -133,11 +133,12 @@ async function loadRsSlots(appt) {
   wrap.innerHTML = `<p class="text-muted small mb-0">Cargando…</p>`;
   const { allSlots } = await api(`/public/my-appointments/${token()}/${appt.id}/reschedule-slots?date=${reschedule.date}`)
     .catch(() => ({ allSlots: [] }));
-  const free = allSlots.filter((s) => s.available);
-  wrap.innerHTML = free.length ? free.map((s) =>
-    `<button class="btn slot-btn available" data-slot="${s.time}">${s.time}</button>`).join("")
-    : `<p class="text-muted small mb-0">Sin horarios libres ese día.</p>`;
-  wrap.querySelectorAll(".slot-btn").forEach((b) => b.onclick = () => {
+  // Se muestran también los horarios ocupados (en gris, deshabilitados) — no solo los libres —
+  // para que se vea claro por qué algunos no se pueden elegir, en vez de que simplemente falten.
+  wrap.innerHTML = allSlots.length ? allSlots.map((s) =>
+    `<button class="btn slot-btn ${s.available ? "available" : "unavailable"}" data-slot="${s.time}" ${s.available ? "" : "disabled"}>${s.time}</button>`).join("")
+    : `<p class="text-muted small mb-0">Sin horarios ese día.</p>`;
+  wrap.querySelectorAll(".slot-btn:not(:disabled)").forEach((b) => b.onclick = () => {
     reschedule.time = b.dataset.slot;
     wrap.querySelectorAll(".slot-btn").forEach((x) => x.classList.remove("active"));
     b.classList.add("active");

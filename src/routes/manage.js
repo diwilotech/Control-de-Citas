@@ -97,7 +97,11 @@ export function registerManage(router) {
     if (!slots.includes(start)) return error("Ese horario ya no está disponible (o se cruza con otra cita tuya); elige otro.", 409);
 
     const end = toHHMM(toMin(start) + appt.duration_min);
-    await run(env, `UPDATE appointments SET date=?, start=?, end=?, space_id=NULL WHERE id=?`, date, start, end, appt.id);
+    // 'reagendar' quedaba "resuelta" (el cliente eligió una hora nueva) así que pasa a confirmed.
+    // 'pending_confirmation' se queda igual — todavía no probó que el celular/correo es suyo, y
+    // reagendar no debe ser un atajo para saltarse esa verificación.
+    const newStatus = appt.status === "reagendar" ? "confirmed" : appt.status;
+    await run(env, `UPDATE appointments SET date=?, start=?, end=?, status=?, space_id=NULL WHERE id=?`, date, start, end, newStatus, appt.id);
     const updated = await first(env, `SELECT * FROM appointments WHERE id=?`, appt.id);
     await sendSelfServiceNotice(env, ctx.business, updated, { name: appt.service_name }, "selfReschedule");
     return json({ ok: true, appointment: updated });

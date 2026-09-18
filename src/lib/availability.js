@@ -71,8 +71,12 @@ export async function availableSlots(env, business, { serviceId, specialistId, d
   for (const row of [...appts, ...blocks]) busy.push([toMin(row.start), toMin(row.end)]);
 
   if (clientId) {
+    // 'reagendar' también cuenta como que el cliente "tiene algo ahí" — aunque el especialista sí
+    // queda libre para otra persona en ese horario (por eso NO se agrega arriba, en el chequeo del
+    // especialista), el cliente no debería poder agendar otra cita suya encima de una que todavía
+    // no movió/canceló, porque en la lista se ve como que sigue ahí.
     const clientAppts = await all(env,
-      `SELECT start, end FROM appointments WHERE business_id=? AND client_id=? AND date=? AND status IN ('confirmed','pending_confirmation') AND id != ?`,
+      `SELECT start, end FROM appointments WHERE business_id=? AND client_id=? AND date=? AND status IN ('confirmed','pending_confirmation','reagendar') AND id != ?`,
       business.id, clientId, date, excludeApptId || "");
     for (const row of clientAppts) busy.push([toMin(row.start), toMin(row.end)]);
   }

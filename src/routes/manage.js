@@ -1,7 +1,7 @@
 import { all, first, run } from "../lib/db.js";
 import { json, error, notFound, readJson } from "../lib/http.js";
 import { availableSlots } from "../lib/availability.js";
-import { ensureManageToken, sendConfirmedNotice, sendSelfServiceNotice } from "../lib/confirm.js";
+import { ensureManageToken, sendConfirmedNotice, sendSelfServiceNotice, markClientVerified } from "../lib/confirm.js";
 
 // Rutas públicas (sin sesión de staff) para que el cliente confirme su cita por correo y para la
 // página "mis citas" (ver/cancelar/reagendar a un horario disponible) — mismo estilo que public.js.
@@ -28,6 +28,7 @@ export function registerManage(router) {
     }
 
     await run(env, `UPDATE appointments SET status='confirmed', confirm_token=NULL WHERE id=?`, appt.id);
+    await markClientVerified(env, appt.client_id);
     const updated = await first(env, `SELECT * FROM appointments WHERE id=?`, appt.id);
     const service = await first(env, `SELECT name FROM services WHERE id=?`, appt.service_id);
     await sendConfirmedNotice(env, ctx.business, updated, service, new URL(request.url).origin);

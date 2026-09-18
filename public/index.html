@@ -89,7 +89,7 @@
       <div id="channelPhoneField">
         <label class="label-xs d-block mb-1">Celular</label>
         <input type="tel" id="clientPhone" class="form-control mb-1">
-        <p class="text-muted small mb-2">Te mandamos un código por WhatsApp para confirmar la reserva.</p>
+        <p class="text-muted small mb-2" id="channelPhoneHint">Te mandamos un código por WhatsApp para confirmar la reserva.</p>
       </div>
       <div id="channelEmailField" style="display:none;">
         <label class="label-xs d-block mb-1">Correo</label>
@@ -110,8 +110,8 @@
 
 <div id="doneScreen" class="container py-5" style="display:none;">
   <div class="card-panel p-4 text-center mx-auto" style="max-width:460px;">
-    <i class="bi bi-hourglass-split" style="font-size:2.5rem;color:var(--amber);"></i>
-    <h3 class="display-font fw-bold mt-2">¡Ya casi!</h3>
+    <i class="bi bi-hourglass-split" id="doneIcon" style="font-size:2.5rem;color:var(--amber);"></i>
+    <h3 class="display-font fw-bold mt-2" id="doneTitle">¡Ya casi!</h3>
     <p class="text-muted mb-3" id="doneMsg">Te reservamos el horario. Falta confirmar.</p>
     <a class="btn btn-brand w-100 py-2" id="waConfirmLink" href="#" target="_blank" rel="noopener" style="display:none;">
       <i class="bi bi-whatsapp"></i> Confirmar por WhatsApp
@@ -133,7 +133,7 @@ const SERVICE_THEMES = [
 ];
 
 let business = null;
-const state = { serviceId: null, specialistId: null, date: null, time: null, channel: "whatsapp" };
+const state = { serviceId: null, specialistId: null, date: null, time: null, channel: "whatsapp", clientVerified: false };
 
 function selectChannel(channel) {
   state.channel = channel;
@@ -141,6 +141,22 @@ function selectChannel(channel) {
   document.getElementById("channelEmailBtn").classList.toggle("active", channel === "email");
   document.getElementById("channelPhoneField").style.display = channel === "whatsapp" ? "block" : "none";
   document.getElementById("channelEmailField").style.display = channel === "email" ? "block" : "none";
+}
+
+let phoneCheckTimer = null;
+function scheduleClientCheck() {
+  clearTimeout(phoneCheckTimer);
+  const phone = document.getElementById("clientPhone").value.trim();
+  const hint = document.getElementById("channelPhoneHint");
+  state.clientVerified = false;
+  if (phone.length < 7) { hint.textContent = "Te mandamos un código por WhatsApp para confirmar la reserva."; return; }
+  phoneCheckTimer = setTimeout(async () => {
+    const { verified } = await api(`/public/client-check?phone=${encodeURIComponent(phone)}`).catch(() => ({ verified: false }));
+    state.clientVerified = verified;
+    hint.textContent = verified
+      ? "✓ Ya estás registrado — tu cita queda confirmada de una, sin PIN."
+      : "Te mandamos un código por WhatsApp para confirmar la reserva.";
+  }, 500);
 }
 
 async function init() {
@@ -157,6 +173,7 @@ async function init() {
   document.getElementById("fabConfirm").onclick = confirmBooking;
   document.getElementById("channelWhatsappBtn").onclick = () => selectChannel("whatsapp");
   document.getElementById("channelEmailBtn").onclick = () => selectChannel("email");
+  document.getElementById("clientPhone").addEventListener("input", scheduleClientCheck);
   selectChannel("whatsapp");
 
   renderServices();
@@ -327,14 +344,25 @@ async function confirmBooking() {
     document.getElementById("bookingFlow").style.display = "none";
     document.getElementById("fabConfirm").style.display = "none";
     const waLink = document.getElementById("waConfirmLink");
-    if (state.channel === "whatsapp" && res.messageResult && res.messageResult.ok && res.messageResult.waLink) {
+    const icon = document.getElementById("doneIcon");
+    const title = document.getElementById("doneTitle");
+    if (res.alreadyConfirmed) {
+      icon.className = "bi bi-check-circle-fill";
+      icon.style.color = "#1e6b45";
+      title.textContent = "¡Listo!";
+      document.getElementById("doneMsg").textContent = "Ya estabas registrado, así que tu cita quedó CONFIRMADA de una — no hace falta que hagas nada más.";
+      waLink.style.display = "none";
+    } else if (state.channel === "whatsapp" && res.messageResult && res.messageResult.ok && res.messageResult.waLink) {
+      icon.className = "bi bi-hourglass-split"; icon.style.color = "var(--amber)"; title.textContent = "¡Ya casi!";
       document.getElementById("doneMsg").textContent = `Te reservamos el horario por ${res.messageResult.windowHours || 3}h. Toca el botón: se abre tu WhatsApp con el mensaje ya escrito, solo tienes que enviarlo para confirmar.`;
       waLink.href = res.messageResult.waLink;
       waLink.style.display = "inline-flex";
     } else if (state.channel === "whatsapp") {
+      icon.className = "bi bi-hourglass-split"; icon.style.color = "var(--amber)"; title.textContent = "¡Ya casi!";
       document.getElementById("doneMsg").textContent = "Tu cita quedó reservada, pero no pudimos armar el link de confirmación por WhatsApp. Contáctanos para confirmarla.";
       waLink.style.display = "none";
     } else {
+      icon.className = "bi bi-hourglass-split"; icon.style.color = "var(--amber)"; title.textContent = "¡Ya casi!";
       document.getElementById("doneMsg").textContent = "Te mandamos un correo con un link — haz clic ahí para confirmar tu cita.";
       waLink.style.display = "none";
     }

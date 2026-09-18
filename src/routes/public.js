@@ -1,7 +1,7 @@
 import { all, first, run, uid } from "../lib/db.js";
 import { json, error, readJson } from "../lib/http.js";
 import { availableSlots, reminderDateTime } from "../lib/availability.js";
-import { sendConfirmationRequest } from "../lib/confirm.js";
+import { sendConfirmationRequest, sendConfirmedNotice } from "../lib/confirm.js";
 
 // Endpoints públicos para la página de reserva del cliente (sin login).
 export function registerPublic(router) {
@@ -46,6 +46,15 @@ export function registerPublic(router) {
     return json(await availableSlots(env, ctx.business, { serviceId, specialistId, date }));
   });
 
+  // Para avisar en el formulario "ya estás registrado" antes de reservar — un cliente que ya
+  // confirmó una cita antes por ese celular no necesita volver a confirmar por PIN.
+  router.get("/api/:slug/public/client-check", async (request, env, ctx) => {
+    const phone = new URL(request.url).searchParams.get("phone");
+    if (!phone) return json({ verified: false });
+    const client = await first(env, `SELECT verified FROM clients WHERE business_id=? AND phone=?`, ctx.business.id, phone);
+    return json({ verified: !!client?.verified });
+  });
+
   router.post("/api/:slug/public/book", async (request, env, ctx) => {
     const body = await readJson(request);
     const { serviceId, specialistId, date, start, clientName, clientEmail, clientPhone } = body;
@@ -78,21 +87,26 @@ export function registerPublic(router) {
     const end = `${String(Math.floor(endMin / 60) % 24).padStart(2, "0")}:${String(endMin % 60).padStart(2, "0")}`;
     const reminder = reminderDateTime(date, start, service.reminder_hours);
     const apptId = uid();
-    // Queda pendiente de confirmar (no 'confirmed' de una) — sendConfirmationRequest arma el link
-    // wa.me con el PIN (WhatsApp, lo manda el cliente) o el correo con el link (lo manda el
-    // servidor), y solo pasa a 'confirmed' cuando el cliente lo envía/hace clic.
+    // Un cliente que ya confirmó una cita antes (por ese mismo celular) ya demostró que el número
+    // es real y suyo — no hace falta pedirle el PIN otra vez, la cita queda confirmada de una.
+    const skipConfirmation = channel === "whatsapp" && !!client.verified;
+    const status = skipConfirmation ? "confirmed" : "pending_confirmation";
     await run(env,
       `INSERT INTO appointments (id, business_id, client_id, client_name, client_email, client_phone,
         specialist_id, service_id, date, start, end, status, confirm_channel, confirmation_date, confirmation_time)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,'pending_confirmation',?,?,?)`,
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       apptId, ctx.business.id, client.id, clientName, clientEmail || null, clientPhone || null,
-      specialistId, serviceId, date, start, end, channel, reminder.date, reminder.time);
+      specialistId, serviceId, date, start, end, status, channel, reminder.date, reminder.time);
 
     const appt = await first(env, `SELECT * FROM appointments WHERE id=?`, apptId);
     const origin = new URL(request.url).origin;
-    const messageResult = await sendConfirmationRequest(env, ctx.business, appt, service, origin);
+    // Si no hace falta confirmar, se manda directo el aviso de "cita confirmada" (con el link de
+    // mis-citas) — mismo mensaje que recibiría después de responder el PIN, solo que de una vez.
+    const messageResult = skipConfirmation
+      ? await sendConfirmedNotice(env, ctx.business, appt, service, origin)
+      : await sendConfirmationRequest(env, ctx.business, appt, service, origin);
 
-    return json({ appointment: appt, channel, messageResult }, { status: 201 });
+    return json({ appointment: appt, channel, alreadyConfirmed: skipConfirmation, messageResult }, { status: 201 });
   });
 }
 

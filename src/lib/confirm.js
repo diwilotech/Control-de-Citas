@@ -125,9 +125,18 @@ export async function handleIncomingWhatsapp(env, business, body, origin) {
   if (!appt) return;
 
   await run(env, `UPDATE appointments SET status='confirmed', confirm_pin=NULL WHERE id=?`, appt.id);
+  await markClientVerified(env, appt.client_id);
   const updated = await first(env, `SELECT * FROM appointments WHERE id=?`, appt.id);
   const service = await first(env, `SELECT name FROM services WHERE id=?`, appt.service_id);
   await sendConfirmedNotice(env, business, updated, service, origin);
+}
+
+// Una vez que un cliente confirma su primera cita (PIN por WhatsApp o link de correo), queda
+// "verificado" — sus próximas reservas por WhatsApp quedan confirmadas de una, sin pedirle el PIN
+// otra vez (ver POST /public/book). Ese primer número/correo ya demostró ser real y suyo.
+export async function markClientVerified(env, clientId) {
+  if (!clientId) return;
+  await run(env, `UPDATE clients SET verified=1 WHERE id=?`, clientId);
 }
 
 // Cron: libera (cancela) las citas que quedaron pendientes de confirmar y ya vencieron. No avisa

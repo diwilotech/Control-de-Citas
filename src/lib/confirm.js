@@ -81,6 +81,26 @@ export async function sendConfirmedNotice(env, business, appt, service, origin) 
   return result;
 }
 
+// "Entrar a mis citas" con solo el celular (por si el cliente perdió el link original) — mismo
+// mecanismo que confirmar una cita: se arma un link wa.me con un PIN para que el CLIENTE lo mande
+// desde su propio WhatsApp; nunca sale un mensaje del negocio sin que el cliente escriba primero.
+const LOGIN_WINDOW_MINUTES = 10;
+
+export async function requestClientLogin(env, business, phone) {
+  const client = await first(env, `SELECT * FROM clients WHERE business_id=? AND phone=?`, business.id, phone);
+  if (!client) return { ok: false, error: "No encontramos citas con ese número." };
+
+  const businessNumber = String(business.whatsapp_business_number || "").replace(/\D/g, "");
+  if (!businessNumber) return { ok: false, error: "Falta configurar el número de WhatsApp del negocio en Ajustes." };
+
+  const pin = randomPin();
+  const expires = new Date(Date.now() + LOGIN_WINDOW_MINUTES * 60000).toISOString();
+  await run(env, `UPDATE clients SET login_pin=?, login_pin_expires_at=? WHERE id=?`, pin, expires, client.id);
+  const text = fillTemplate(await templateBody(env, business, "loginWhatsapp"), { codigo: pin });
+  const waLink = `https://wa.me/${businessNumber}?text=${encodeURIComponent(text)}`;
+  return { ok: true, waLink };
+}
+
 // Cancelación/solicitud de reagendar hechas por el cliente desde el link de "mis citas".
 export async function sendSelfServiceNotice(env, business, appt, service, templateKey) {
   const body = fillTemplate(await templateBody(env, business, templateKey), {
@@ -118,17 +138,31 @@ export async function handleIncomingWhatsapp(env, business, body, origin) {
   const pin = pinMatch ? pinMatch[1] : allMatches.length ? allMatches[allMatches.length - 1][1] : null;
   if (!pin) return;
 
+  const now = new Date().toISOString();
   const appt = await first(env,
     `SELECT * FROM appointments WHERE business_id=? AND status='pending_confirmation' AND confirm_channel='whatsapp'
        AND confirm_pin=? AND confirm_expires_at > ?`,
-    business.id, pin, new Date().toISOString());
-  if (!appt) return;
+    business.id, pin, now);
+  if (appt) {
+    await run(env, `UPDATE appointments SET status='confirmed', confirm_pin=NULL WHERE id=?`, appt.id);
+    await markClientVerified(env, appt.client_id);
+    const updated = await first(env, `SELECT * FROM appointments WHERE id=?`, appt.id);
+    const service = await first(env, `SELECT name FROM services WHERE id=?`, appt.service_id);
+    await sendConfirmedNotice(env, business, updated, service, origin);
+    return;
+  }
 
-  await run(env, `UPDATE appointments SET status='confirmed', confirm_pin=NULL WHERE id=?`, appt.id);
-  await markClientVerified(env, appt.client_id);
-  const updated = await first(env, `SELECT * FROM appointments WHERE id=?`, appt.id);
-  const service = await first(env, `SELECT name FROM services WHERE id=?`, appt.service_id);
-  await sendConfirmedNotice(env, business, updated, service, origin);
+  // No era el PIN de ninguna cita pendiente — puede ser el de "entrar a mis citas".
+  const client = await first(env,
+    `SELECT * FROM clients WHERE business_id=? AND login_pin=? AND login_pin_expires_at > ?`,
+    business.id, pin, now);
+  if (!client) return;
+
+  await run(env, `UPDATE clients SET login_pin=NULL, login_pin_expires_at=NULL WHERE id=?`, client.id);
+  const manageToken = await ensureManageToken(env, client.id);
+  const link = manageLink(origin, business, manageToken);
+  const linkBody = fillTemplate(await templateBody(env, business, "loginLink"), { link });
+  await sendWhatsApp(env, business, client.phone, linkBody);
 }
 
 // Una vez que un cliente confirma su primera cita (PIN por WhatsApp o link de correo), queda

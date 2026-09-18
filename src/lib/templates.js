@@ -14,6 +14,10 @@ export const DEFAULT_TEMPLATES = {
   confirmed: "¡Listo {cliente}! Tu cita de {servicio} quedó CONFIRMADA para el {fecha} a las {hora}. Consulta, reagenda o cancela aquí: {link}",
   selfCancel: "Hola {cliente}, tu cita de {servicio} del {fecha} a las {hora} fue cancelada (nos avisaste desde tu link de citas).",
   selfReschedule: "Hola {cliente}, tu cita de {servicio} quedó reagendada para el {fecha} a las {hora}.",
+  // El cliente lo manda (mismo estilo que confirmWhatsapp) para volver a entrar a "mis citas" si
+  // perdió el link original.
+  loginWhatsapp: "Hola, quiero ver mis citas. PIN #{codigo}",
+  loginLink: "Aquí puedes ver, reagendar o cancelar tus citas: {link}",
 };
 
 export function formatDateHuman(iso) {

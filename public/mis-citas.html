@@ -21,8 +21,19 @@
 
 <div class="container py-4 py-lg-5" style="max-width:640px;">
 
-  <div id="noToken" class="card-panel p-4 text-center" style="display:none;">
-    <p class="text-muted mb-0">Este link no es válido. Usa el que te mandamos por WhatsApp o correo al confirmar tu cita.</p>
+  <div id="noToken" class="card-panel p-4" style="display:none;">
+    <h2 class="h5 fw-bold display-font mb-2">Ver mis citas</h2>
+    <p class="text-muted small mb-3" id="noTokenHint">¿Perdiste el link que te mandamos al confirmar? Escribe tu celular y te mandamos uno nuevo por WhatsApp.</p>
+    <div id="loginStep1">
+      <label class="label-xs d-block mb-1">Celular</label>
+      <input type="tel" id="loginPhone" class="form-control mb-2">
+      <button class="btn btn-brand w-100" id="loginRequestBtn">Entrar</button>
+    </div>
+    <div id="loginStep2" style="display:none;">
+      <p class="text-muted small mb-2">Toca el botón: se abre tu WhatsApp con el mensaje ya escrito — solo tienes que enviarlo.</p>
+      <a class="btn btn-brand w-100 mb-2" id="loginWaLink" href="#" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Enviar por WhatsApp</a>
+      <p class="text-muted small text-center mb-0"><span class="spinner-border spinner-border-sm"></span> Esperando que lo envíes…</p>
+    </div>
   </div>
 
   <div id="okBanner" class="card-panel p-3 mb-3 text-center" style="display:none;background:#e6f4ec;border-color:#3a9a6d;">
@@ -190,16 +201,17 @@ async function act(apptId, action, confirmMsg) {
   } catch (e) { toast(e.message, false); }
 }
 
+async function loadBizHeader() {
+  business = await api(`/public/business`).catch(() => ({ openDays: [1, 2, 3, 4, 5, 6], dateExceptions: [] }));
+  if (business.name) document.getElementById("bizName").textContent = business.name;
+  if (business.logoKey) {
+    document.getElementById("bizMark").innerHTML = `<img src="/api/${tenantSlug()}/public/files/${business.logoKey}" style="width:100%;height:100%;object-fit:cover;">`;
+  }
+}
+
 async function load() {
   try {
-    const [data] = await Promise.all([
-      api(`/public/my-appointments/${token()}`),
-      api(`/public/business`).then((b) => { business = b; }).catch(() => { business = { openDays: [1, 2, 3, 4, 5, 6], dateExceptions: [] }; }),
-    ]);
-    document.getElementById("bizName").textContent = data.business.name;
-    if (business.logoKey) {
-      document.getElementById("bizMark").innerHTML = `<img src="/api/${tenantSlug()}/public/files/${business.logoKey}" style="width:100%;height:100%;object-fit:cover;">`;
-    }
+    const data = await api(`/public/my-appointments/${token()}`);
     document.getElementById("clientName").textContent = data.client.name;
     document.getElementById("listWrap").style.display = "block";
     apptsCache = data.appointments;
@@ -209,9 +221,36 @@ async function load() {
   }
 }
 
+// "Entrar" con solo el celular (si se perdió el link original) — mismo mecanismo que confirmar
+// una cita: se abre WhatsApp con un PIN ya escrito, el negocio nunca manda nada primero.
+let loginPollTimer = null;
+function pollLogin(phone) {
+  clearInterval(loginPollTimer);
+  let attempts = 0;
+  loginPollTimer = setInterval(async () => {
+    attempts++;
+    if (attempts > 60) { clearInterval(loginPollTimer); return; } // ~3 min
+    const { ready, manageToken } = await api(`/public/login-check?phone=${encodeURIComponent(phone)}`).catch(() => ({ ready: false }));
+    if (ready) { clearInterval(loginPollTimer); location.href = `${location.pathname}?t=${manageToken}`; }
+  }, 3000);
+}
+
+document.getElementById("loginRequestBtn").onclick = async () => {
+  const phone = document.getElementById("loginPhone").value.trim();
+  if (!phone) return toast("Escribe tu celular.", false);
+  try {
+    const { waLink } = await api("/public/login-request", { method: "POST", body: { phone } });
+    document.getElementById("loginStep1").style.display = "none";
+    document.getElementById("loginStep2").style.display = "block";
+    document.getElementById("loginWaLink").href = waLink;
+    pollLogin(phone);
+  } catch (e) { toast(e.message, false); }
+};
+
 function init() {
-  if (!token()) { document.getElementById("noToken").style.display = "block"; return; }
+  loadBizHeader();
   const params = new URLSearchParams(location.search);
+  if (!token()) { document.getElementById("noToken").style.display = "block"; return; }
   if (params.get("justConfirmed")) document.getElementById("okBanner").style.display = "block";
   if (params.get("err")) {
     const msgs = { confirm: "Ese link de confirmación ya no es válido.", expired: "Ese link de confirmación ya venció." };

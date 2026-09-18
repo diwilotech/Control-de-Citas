@@ -1,7 +1,7 @@
 import { all, first, run } from "../lib/db.js";
 import { json, error, notFound, readJson } from "../lib/http.js";
 import { availableSlots } from "../lib/availability.js";
-import { ensureManageToken, sendConfirmedNotice, sendSelfServiceNotice, markClientVerified } from "../lib/confirm.js";
+import { ensureManageToken, sendConfirmedNotice, sendSelfServiceNotice, markClientVerified, requestClientLogin } from "../lib/confirm.js";
 
 // Rutas públicas (sin sesión de staff) para que el cliente confirme su cita por correo y para la
 // página "mis citas" (ver/cancelar/reagendar a un horario disponible) — mismo estilo que public.js.
@@ -37,6 +37,25 @@ export function registerManage(router) {
     manageUrl.searchParams.set("t", manageToken);
     manageUrl.searchParams.set("justConfirmed", "1");
     return Response.redirect(manageUrl.toString(), 302);
+  });
+
+  // "Ver mis citas" con solo el celular (si se perdió el link original que llegó al confirmar).
+  router.post("/api/:slug/public/login-request", async (request, env, ctx) => {
+    const { phone } = await readJson(request);
+    if (!phone) return error("Falta el celular.");
+    const result = await requestClientLogin(env, ctx.business, phone);
+    if (!result.ok) return error(result.error, 404);
+    return json({ waLink: result.waLink });
+  });
+
+  // El navegador consulta esto cada pocos segundos después de mandar el WhatsApp con el PIN —
+  // cuando el webhook lo procese, login_pin queda en NULL y aparece el manage_token.
+  router.get("/api/:slug/public/login-check", async (request, env, ctx) => {
+    const phone = new URL(request.url).searchParams.get("phone");
+    if (!phone) return json({ ready: false });
+    const client = await first(env, `SELECT manage_token, login_pin FROM clients WHERE business_id=? AND phone=?`, ctx.business.id, phone);
+    if (client && !client.login_pin && client.manage_token) return json({ ready: true, manageToken: client.manage_token });
+    return json({ ready: false });
   });
 
   router.get("/api/:slug/public/my-appointments/:token", async (request, env, ctx) => {

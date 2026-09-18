@@ -55,16 +55,22 @@ window.Rules = (function () {
     servicesCache = await api("/staff/services").catch(() => []);
     document.getElementById("servicesList").innerHTML = servicesCache.map((s) => {
       let allowed = []; try { allowed = JSON.parse(s.allowed_space_types || "[]"); } catch { allowed = []; }
+      const thumb = s.photo_key
+        ? `<img src="${servicePhotoUrl(s.photo_key)}" style="width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0;">`
+        : `<div style="width:52px;height:52px;border-radius:10px;flex-shrink:0;background:#f0eee6;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="bi bi-image"></i></div>`;
       return `<div class="service-row d-flex justify-content-between align-items-start gap-2">
-        <div>
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="fw-semibold">${s.name}</span>
-            <span class="badge rounded-pill" style="background:rgba(15,82,87,.1);color:var(--primary);">$${s.price.toLocaleString("es-CO")}</span>
-          </div>
-          <div class="text-muted small mt-1">${s.duration_min} min · Cancela ${s.cancel_window_hours}h antes · Recordatorio ${s.reminder_hours}h antes</div>
-          <div class="d-flex flex-wrap gap-1 mt-2">
-            ${allowed.length ? allowed.map((k) => `<span class="badge rounded-pill" style="background:#f0eee6;color:var(--ink);font-size:.68rem;">${typeLabel(k)}</span>`).join("")
-              : `<span class="text-muted small" style="font-size:.72rem;">Admite cualquier espacio</span>`}
+        <div class="d-flex gap-2">
+          ${thumb}
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="fw-semibold">${s.name}</span>
+              <span class="badge rounded-pill" style="background:rgba(15,82,87,.1);color:var(--primary);">$${s.price.toLocaleString("es-CO")}</span>
+            </div>
+            <div class="text-muted small mt-1">${s.duration_min} min · Cancela ${s.cancel_window_hours}h antes · Recordatorio ${s.reminder_hours}h antes</div>
+            <div class="d-flex flex-wrap gap-1 mt-2">
+              ${allowed.length ? allowed.map((k) => `<span class="badge rounded-pill" style="background:#f0eee6;color:var(--ink);font-size:.68rem;">${typeLabel(k)}</span>`).join("")
+                : `<span class="text-muted small" style="font-size:.72rem;">Admite cualquier espacio</span>`}
+            </div>
           </div>
         </div>
         <button class="btn btn-sm btn-outline-dark flex-shrink-0" data-edit-svc="${s.id}"><i class="bi bi-pencil"></i></button>
@@ -86,9 +92,21 @@ window.Rules = (function () {
     document.getElementById("editServicePhoto").value = "";
     pendingServicePhotoBlob = null;
     const preview = document.getElementById("editServicePhotoPreview");
-    if (existingKey) { preview.src = servicePhotoUrl(existingKey); preview.style.display = "block"; }
-    else { preview.style.display = "none"; }
+    const recropBtn = document.getElementById("editServiceRecropBtn");
+    if (existingKey) { preview.src = servicePhotoUrl(existingKey); preview.style.display = "block"; recropBtn.style.display = "inline-block"; }
+    else { preview.style.display = "none"; recropBtn.style.display = "none"; }
   }
+
+  async function recropServicePreview() {
+    const preview = document.getElementById("editServicePhotoPreview");
+    if (!preview.src) return;
+    const currentBlob = await fetch(preview.src).then((r) => r.blob());
+    const blob = await window.ImgCropper.open(currentBlob, { aspectRatio: 2.4 });
+    if (!blob) return;
+    pendingServicePhotoBlob = blob;
+    preview.src = URL.createObjectURL(blob);
+  }
+  document.getElementById("editServiceRecropBtn").onclick = recropServicePreview;
 
   // Al elegir un archivo se abre el recortador (Cropper.js) en vez de subirlo tal cual — la
   // franja de foto de servicio es ancha y baja (background-size:cover), así que se sugiere ese
@@ -103,6 +121,7 @@ window.Rules = (function () {
     const preview = document.getElementById("editServicePhotoPreview");
     preview.src = URL.createObjectURL(blob);
     preview.style.display = "block";
+    document.getElementById("editServiceRecropBtn").style.display = "inline-block";
   });
 
   async function uploadServicePhoto(blob) {

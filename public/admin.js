@@ -105,8 +105,12 @@ window.AdminShell = (function () {
     document.getElementById("setGmailUser").value = biz.gmail_user || "";
     document.getElementById("setGmailAppPassword").value = biz.gmail_app_password || "";
     const preview = document.getElementById("setLogoPreview");
-    if (biz.logo_key) { preview.src = `/api/${tenantSlug()}/public/files/${biz.logo_key}`; preview.style.display = "block"; }
-    else preview.style.display = "none";
+    const recropBtn = document.getElementById("setLogoRecropBtn");
+    if (biz.logo_key) {
+      preview.src = `/api/${tenantSlug()}/public/files/${biz.logo_key}`;
+      preview.style.display = "block";
+      recropBtn.style.display = "inline-block";
+    } else { preview.style.display = "none"; recropBtn.style.display = "none"; }
   }
 
   let pendingLogoBlob = null;
@@ -123,7 +127,18 @@ window.AdminShell = (function () {
     const preview = document.getElementById("setLogoPreview");
     preview.src = URL.createObjectURL(blob);
     preview.style.display = "block";
+    document.getElementById("setLogoRecropBtn").style.display = "inline-block";
   });
+
+  document.getElementById("setLogoRecropBtn").onclick = async () => {
+    const preview = document.getElementById("setLogoPreview");
+    if (!preview.src) return;
+    const currentBlob = await fetch(preview.src).then((r) => r.blob());
+    const blob = await window.ImgCropper.open(currentBlob, { aspectRatio: 1 });
+    if (!blob) return;
+    pendingLogoBlob = blob;
+    preview.src = URL.createObjectURL(blob);
+  };
 
   document.getElementById("saveLogoBtn").onclick = async () => {
     if (!pendingLogoBlob) return toast("Elige una imagen primero.", false);

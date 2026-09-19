@@ -105,3 +105,32 @@ export async function availableSlots(env, business, { serviceId, specialistId, d
   }
   return { slots, allSlots, durationMin: service.duration_min };
 }
+
+// Grilla de 30 min ocupado/libre para un especialista+fecha, SIN un servicio de por medio (a
+// diferencia de availableSlots) — la usan los selectores de hora del panel de staff (Bloqueos,
+// Añadir cita, Mover cita) solo como referencia visual. A propósito no filtra horas pasadas ni
+// bloquea nada: el staff puede elegir cualquier horario igual, incluso uno marcado ocupado, para
+// corregir datos o forzar un caso puntual.
+export async function dayOccupancy(env, business, { specialistId, date }) {
+  const hours = await effectiveHours(env, business, date, specialistId);
+  if (!hours) return { allSlots: [] };
+
+  const busy = [];
+  const appts = await all(env,
+    `SELECT start, end FROM appointments WHERE business_id=? AND specialist_id=? AND date=? AND status IN ('confirmed','completed','pending_confirmation')`,
+    business.id, specialistId, date);
+  const blocks = await all(env,
+    `SELECT start, end FROM blocks WHERE business_id=? AND specialist_id=? AND date=?`,
+    business.id, specialistId, date);
+  for (const row of [...appts, ...blocks]) busy.push([toMin(row.start), toMin(row.end)]);
+
+  const step = 30;
+  const startMin = hours.open * 60;
+  const endMin = hours.close * 60;
+  const allSlots = [];
+  for (let t = startMin; t < endMin; t += step) {
+    const overlaps = busy.some(([bs, be]) => t < be && t + step > bs);
+    allSlots.push({ time: toHHMM(t), available: !overlaps });
+  }
+  return { allSlots };
+}

@@ -9,6 +9,29 @@ window.Agenda = (function () {
   const MES_LABELS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   const STATUS_LABELS = { confirmed: "Confirmada", pending_confirmation: "Pendiente de confirmar", completed: "Completada", cancelled: "Cancelada", "no-show": "Inasistencia", reagendar: "Por reagendar" };
 
+  // Grilla visual de horarios (verde=libre, gris=ocupado) para Bloqueos/Añadir cita/Mover cita.
+  // serviceId opcional: con servicio usa /public/availability (respeta su duración); sin
+  // servicio (Bloqueos no tiene uno) usa /staff/day-occupancy (grilla genérica de 30 min). A
+  // diferencia de la reserva del cliente, acá NADA queda deshabilitado — el staff puede elegir
+  // un horario marcado ocupado igual, para corregir datos o forzar un caso puntual.
+  async function renderSlotGrid(container, { specialistId, serviceId, date, selected, onPick }) {
+    if (!specialistId || !date) { container.innerHTML = `<p class="text-muted small mb-0">Elige especialista y fecha.</p>`; return; }
+    container.innerHTML = `<p class="text-muted small mb-0">Cargando…</p>`;
+    const data = serviceId
+      ? await api(`/public/availability?serviceId=${serviceId}&specialistId=${specialistId}&date=${date}`).catch(() => ({ allSlots: [] }))
+      : await api(`/staff/day-occupancy?specialistId=${specialistId}&date=${date}`).catch(() => ({ allSlots: [] }));
+    const slots = data.allSlots || [];
+    if (!slots.length) { container.innerHTML = `<p class="text-muted small mb-0">Sin horarios ese día.</p>`; return; }
+    container.innerHTML = slots.map((s) =>
+      `<button type="button" class="btn slot-btn ${s.available ? "available" : "unavailable"} ${selected === s.time ? "active" : ""}" data-slot="${s.time}">${s.time}</button>`
+    ).join("");
+    container.querySelectorAll(".slot-btn").forEach((b) => b.onclick = () => {
+      container.querySelectorAll(".slot-btn").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      onPick(b.dataset.slot);
+    });
+  }
+
   let currentDate = new Date(); currentDate.setHours(0, 0, 0, 0);
   let viewMode = "day";
   let activeSpecialist = "all";
@@ -266,7 +289,18 @@ window.Agenda = (function () {
     document.getElementById("blockSpecialist").innerHTML = specialistsCache.map((sp) => `<option value="${sp.id}">${sp.name}</option>`).join("");
     document.getElementById("blockDate").value = document.getElementById("blockDate").value || todayISO();
     renderBlocksList();
+    renderBlockSlotGrid();
   }
+  function renderBlockSlotGrid() {
+    renderSlotGrid(document.getElementById("blockSlotGrid"), {
+      specialistId: document.getElementById("blockSpecialist").value,
+      date: document.getElementById("blockDate").value,
+      selected: document.getElementById("blockStart").value,
+      onPick: (time) => { document.getElementById("blockStart").value = time; },
+    });
+  }
+  document.getElementById("blockSpecialist").onchange = renderBlockSlotGrid;
+  document.getElementById("blockDate").onchange = renderBlockSlotGrid;
   async function renderBlocksList() {
     const blocks = await api("/staff/blocks").catch(() => []);
     const wrap = document.getElementById("blocksList");
@@ -294,21 +328,36 @@ window.Agenda = (function () {
     await api("/staff/blocks", { method: "POST", body: { specialist_id: specialistId, date, start, end, reason } });
     document.getElementById("blockReason").value = "";
     toast("Bloqueo aplicado.");
-    renderBlocksList(); renderTimeline();
+    renderBlocksList(); renderTimeline(); renderBlockSlotGrid();
   };
 
   /* ---------- Añadir cita ---------- */
+  let walkInServices = [];
+  function renderWalkInSlotGrid() {
+    renderSlotGrid(document.getElementById("walkInSlotGrid"), {
+      specialistId: document.getElementById("walkInSpecialist").value,
+      serviceId: document.getElementById("walkInService").value,
+      date: document.getElementById("walkInDate").value,
+      selected: document.getElementById("walkInStart").value,
+      onPick: (time) => { document.getElementById("walkInStart").value = time; },
+    });
+  }
+  document.getElementById("walkInService").onchange = renderWalkInSlotGrid;
+  document.getElementById("walkInSpecialist").onchange = renderWalkInSlotGrid;
+  document.getElementById("walkInDate").onchange = renderWalkInSlotGrid;
+
   document.getElementById("walkInOpenBtn").onclick = async () => {
     await loadCatalog();
-    const services = await api("/staff/services").catch(() => []);
+    walkInServices = await api("/staff/services").catch(() => []);
     document.getElementById("walkInName").value = "";
     document.getElementById("walkInEmail").value = "";
     document.getElementById("walkInPhone").value = "";
-    document.getElementById("walkInService").innerHTML = services.map((s) => `<option value="${s.id}">${s.name}</option>`).join("");
+    document.getElementById("walkInService").innerHTML = walkInServices.map((s) => `<option value="${s.id}">${s.name}</option>`).join("");
     document.getElementById("walkInSpecialist").innerHTML = specialistsCache.map((sp) => `<option value="${sp.id}">${sp.name}</option>`).join("");
     document.getElementById("walkInDate").value = dateToISO(currentDate);
     document.getElementById("walkInStart").value = "";
     new bootstrap.Modal(document.getElementById("walkInModal")).show();
+    renderWalkInSlotGrid();
   };
   document.getElementById("walkInSaveBtn").onclick = async () => {
     const clientName = document.getElementById("walkInName").value.trim();
@@ -332,13 +381,24 @@ window.Agenda = (function () {
 
   /* ---------- Mover cita ---------- */
   const MoveBox = (() => {
-    let currentApptId = null, modal = null;
+    let currentApptId = null, modal = null, currentAppt = null;
+    function renderGrid() {
+      renderSlotGrid(document.getElementById("moveSlotGrid"), {
+        specialistId: currentAppt.specialist_id,
+        serviceId: currentAppt.service_id,
+        date: document.getElementById("moveModalDate").value,
+        selected: document.getElementById("moveModalStart").value,
+        onPick: (time) => { document.getElementById("moveModalStart").value = time; },
+      });
+    }
     function open(apptId, appt) {
       currentApptId = apptId;
+      currentAppt = appt;
       document.getElementById("moveModalDate").value = appt.date;
       document.getElementById("moveModalStart").value = appt.start;
       modal = modal || new bootstrap.Modal(document.getElementById("moveModal"));
       modal.show();
+      renderGrid();
     }
     async function send(sendMessage) {
       const date = document.getElementById("moveModalDate").value;
@@ -351,10 +411,11 @@ window.Agenda = (function () {
         renderTimeline();
       } catch (e) { toast(e.message, false); }
     }
-    return { open, send };
+    return { open, send, renderGrid };
   })();
   document.getElementById("moveSendBtn").onclick = () => MoveBox.send(true);
   document.getElementById("moveNoSendBtn").onclick = () => MoveBox.send(false);
+  document.getElementById("moveModalDate").onchange = () => MoveBox.renderGrid();
 
   /* ---------- Asignar espacio / detalle de cita ---------- */
   const AssignSpace = (() => {

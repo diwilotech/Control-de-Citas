@@ -355,10 +355,11 @@
       </div>
       <div class="modal-body">
         <p class="text-muted small mb-3">Propón una nueva fecha y hora; la cita queda pendiente hasta que el cliente confirme.</p>
-        <div class="row g-3 mb-3">
-          <div class="col-sm-6"><label class="label-xs d-block mb-1">Nueva fecha</label><input type="date" id="moveModalDate" class="form-control"></div>
-          <div class="col-sm-6"><label class="label-xs d-block mb-1">Nueva hora</label><input type="time" id="moveModalStart" class="form-control"></div>
-        </div>
+        <label class="label-xs d-block mb-1">Nueva fecha</label>
+        <input type="date" id="moveModalDate" class="form-control mb-2">
+        <input type="hidden" id="moveModalStart">
+        <label class="label-xs d-block mb-1">Nueva hora <span class="text-muted fw-normal">— en gris, horarios ocupados de ese especialista (puedes elegirlos igual si quieres forzar)</span></label>
+        <div class="d-flex flex-wrap gap-2 mb-3" id="moveSlotGrid" style="max-height:180px;overflow-y:auto;"></div>
         <p class="small mb-2"><i class="bi bi-question-circle"></i> ¿Enviar un mensaje al cliente avisando la propuesta?</p>
         <div class="d-flex gap-2">
           <button class="btn btn-brand flex-fill" id="moveSendBtn">Sí, enviar</button>
@@ -388,10 +389,11 @@
           <div class="col-sm-6"><label class="label-xs d-block mb-1">Servicio</label><select id="walkInService" class="form-select"></select></div>
           <div class="col-sm-6"><label class="label-xs d-block mb-1">Especialista</label><select id="walkInSpecialist" class="form-select"></select></div>
         </div>
-        <div class="row g-3 mb-3">
-          <div class="col-sm-6"><label class="label-xs d-block mb-1">Fecha</label><input type="date" id="walkInDate" class="form-control"></div>
-          <div class="col-sm-6"><label class="label-xs d-block mb-1">Hora</label><input type="time" id="walkInStart" class="form-control"></div>
-        </div>
+        <label class="label-xs d-block mb-1">Fecha</label>
+        <input type="date" id="walkInDate" class="form-control mb-2">
+        <input type="hidden" id="walkInStart">
+        <label class="label-xs d-block mb-1">Hora <span class="text-muted fw-normal">— en gris, horarios ya ocupados (puedes elegirlos igual si quieres forzar)</span></label>
+        <div class="d-flex flex-wrap gap-2 mb-3" id="walkInSlotGrid" style="max-height:180px;overflow-y:auto;"></div>
         <button class="btn btn-brand w-100" id="walkInSaveBtn"><i class="bi bi-check2-circle"></i> Registrar cita</button>
       </div>
     </div>
@@ -449,6 +451,8 @@
           <div class="col-sm-6"><label class="label-xs d-block mb-1">Especialista</label><select id="blockSpecialist" class="form-select"></select></div>
           <div class="col-sm-3"><label class="label-xs d-block mb-1">Fecha</label><input type="date" id="blockDate" class="form-control"></div>
         </div>
+        <label class="label-xs d-block mb-1">Horarios de ese día <span class="text-muted fw-normal">— clic para llenar el inicio</span></label>
+        <div class="d-flex flex-wrap gap-2 mb-3" id="blockSlotGrid" style="max-height:150px;overflow-y:auto;"></div>
         <div class="row g-3 mb-3">
           <div class="col-sm-3"><label class="label-xs d-block mb-1">Inicio</label><input type="time" id="blockStart" class="form-control"></div>
           <div class="col-sm-3"><label class="label-xs d-block mb-1">Fin</label><input type="time" id="blockEnd" class="form-control"></div>
